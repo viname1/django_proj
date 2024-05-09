@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Добро пожаловать{% endblock title %}
+{% block header %}Профиль{% endblock header %}
+{% block content %}
+{% if user.is_authenticated %}
+    {% if user.role == 0 %}
+        {% comment %} Предложить выбрать тип профиля и сохранить {% endcomment %}
+        Выберите роль профиля
+        <form id="choiceForm" method="post">
+            {% csrf_token %}
+            {% bootstrap_button button_type="submit" value="1" content="Соискатель" %}
+            {% bootstrap_button button_type="submit" value="2" content="Рекрутер" %}
+          </form>
+    {% else %}
+    <form  class="form-control form-control-sm" method="post">
+        {% csrf_token %}
+        {% bootstrap_form commonForm %}
+        {% bootstrap_form secondForm %}
+        {% bootstrap_button button_type="submit" content="Сохранить" %}
+    </form>
+    {% endif %}
+{% endif %}
+{% endblock content %}

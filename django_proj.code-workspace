@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"extensions": {
+		"recommendations": [
+			"donjayamanne.python-environment-manager",
+			"ms-python.python",
+			"batisteo.vscode-django",
+			"codeium.codeium",
+			"ms-ceintl.vscode-language-pack-ru"
+		]
+	}
+}

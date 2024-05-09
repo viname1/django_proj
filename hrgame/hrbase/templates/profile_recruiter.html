@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Добро пожаловать{% endblock title %}
+{% block header %}Профиль{% endblock header %}
+{% block content %}
+{% if user.is_authenticated %}
+    {% if user.role == 0 %}
+    {% comment %} Предложить выбрать тип профиля и сохранить {% endcomment %}
+    {% endif %}
+{% endif %}
+{% endblock content %}
