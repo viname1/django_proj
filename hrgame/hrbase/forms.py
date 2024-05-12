@@ -49,3 +49,8 @@ class RecruiterUserForm(forms.ModelForm):
 
 class RoleSelectForm(forms.Form):
     role = forms.ChoiceField(choices=ProfileRole.choicesValues(ProfileRole))
+
+class AvatarForm(forms.ModelForm):
+    class Meta:
+        model = UserExtend
+        fields = ('avatar',)

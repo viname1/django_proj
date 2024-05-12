@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Добро пожаловать{% endblock title %}
+{% block header %}Профиль{% endblock header %}
+{% block content %}
+<form class="form-control form-control-sm" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% bootstrap_form userForm %}
+    {% bootstrap_form secondForm %}
+    {% bootstrap_button button_type="submit" content="Сохранить" %}
+</form>
+{% endblock content %}

@@ -6,19 +6,59 @@
 {% if user.is_authenticated %}
     {% if user.role == 0 %}
         {% comment %} Предложить выбрать тип профиля и сохранить {% endcomment %}
+        {% comment %} Используется после регистрации пользователя {% endcomment %}
         Выберите роль профиля
         <form id="choiceForm" method="post">
             {% csrf_token %}
-            {% bootstrap_button button_type="submit" value="1" content="Соискатель" %}
-            {% bootstrap_button button_type="submit" value="2" content="Рекрутер" %}
+            {% bootstrap_button button_type="submit" name="role" value="1" content="Соискатель" %}
+            {% bootstrap_button button_type="submit" name="role" value="2" content="Рекрутер" %}
           </form>
     {% else %}
-    <form  class="form-control form-control-sm" method="post">
-        {% csrf_token %}
-        {% bootstrap_form commonForm %}
-        {% bootstrap_form secondForm %}
-        {% bootstrap_button button_type="submit" content="Сохранить" %}
-    </form>
+        {% comment %} Просмотр профиля {% endcomment %}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="dropdown">
+                    <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid" title="Нажмите, чтобы изменить аватарку">
+                        {% else %}
+                            <div role="button">
+                                <small class="text-muted">Нажмите, чтобы загрузить аватарку</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="dropdown-menu">
+                        <div class="d-flex justify-content-center">
+                            <div class="card col-md-10">
+                                <div class="card-header text-center">Загрузка аватарки      </div>
+                                <div class="card-body">
+                                    <form method="post" enctype="multipart/form-data" action="{% url 'avatar_upload' %}">
+                                        {% csrf_token %}
+                                        <input type="file" name="avatar" accept="image/*" class="form-control" id="id_avatar">
+                                        {% comment %} {% bootstrap_form avatarForm %} {% endcomment %}
+                                        <button type="submit" class="btn btn-primary btn-block">Upload Avatar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              
+                <hr>
+                <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+                <p>EMAIL: {{ user.email }}</p>
+                <p>Роль: {% if user.role == 1 %}Соискатель{% elif user.role == 2 %}Рекрутер{% endif %}</p>
+                {% comment %} В зависимости от роли можно добавить разного {% endcomment %}
+                {% if user.role == 1 %}
+                    <p>О себе: {{ user.job_seeker.about_self }}</p>
+                {% elif user.role == 2 %}
+                {% endif %}
+                <hr>
+            </div>
+            <div class="col-md-8">
+                <p>{{ user.profile.about_self }}</p>
+            </div>
+        </div>
     {% endif %}
 {% endif %}
 {% endblock content %}
