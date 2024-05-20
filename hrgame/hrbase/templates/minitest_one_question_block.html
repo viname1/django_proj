@@ -1,0 +1,27 @@
+
+<div class="card">
+    <div class="card-header user-select-none">
+        {{question.number}}. {{question.text}}
+    </div>
+    <div class="list-group list-group-flush">
+        {% if question.choice_type == 1 %}
+        {% for choice in question.choice_set.all %}
+        <div class="form-check list-group-item">
+            <label class="form-check-label w-100 user-select-none" for="q{{question.number}}c{{choice.number}}">
+                <input class="form-check-input" type="radio" name="q{{question.number}}" id="q{{question.number}}c{{choice.number}}" value="{{choice.number}}">
+                {{choice.text}}
+            </label>
+        </div>
+        {% endfor %}
+        {% elif question.choice_type == 2 %}
+        {% for choice in question.choice_set.all %}
+        <div class="form-check list-group-item">
+            <label class="form-check-label w-100 user-select-none" for="q{{question.number}}c{{choice.number}}">
+                <input class="form-check-input" type="checkbox" name="q{{question.number}}" id="q{{question.number}}c{{choice.number}}" value="{{choice.number}}">
+                {{choice.text}}
+            </label>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>

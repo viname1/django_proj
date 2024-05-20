@@ -4,7 +4,9 @@
 			"path": "."
 		}
 	],
-	"settings": {},
+	"settings": {
+		"debugpy.debugJustMyCode": false
+	},
 	"extensions": {
 		"recommendations": [
 			"donjayamanne.python-environment-manager",

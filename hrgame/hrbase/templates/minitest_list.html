@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+Для вас доступны следующие тесты:
+<ul class="list-group">
+    {% for minitest in minitest_list.all %}
+    <li class="list-group-item">
+        <a href="{% url 'minitest_start' minitest.id %}">{{ minitest.title }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock content %}

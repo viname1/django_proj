@@ -1,3 +1,4 @@
+import json
 from django.http import HttpRequest
 from django.shortcuts import render, HttpResponse, redirect
 from django.conf import settings
@@ -7,6 +8,8 @@ from hrbase.forms import AvatarForm, CommonUserForm, JobSeekerUserForm, Recruite
 from hrbase.models import JobSeekerUser, RecruiterUser
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from .models import Choice, MiniTest, MiniTestChoiceResult, MiniTestQuestionResult, MiniTestResult, Question, QuestionType
+
 
 # Create your views here.
 
@@ -44,6 +47,7 @@ def profile(
         # Сохранить роль пользователя
         user.role = request.POST['role']
         user.save()
+        return redirect('profile')
     else:
         commonForm = CommonUserForm(instance=user)
         secondForm = None
@@ -107,5 +111,103 @@ def profile_edit(
             secondForm = RoleSelectForm()
         return render(request, 'profile_edit.html', {'userForm': userForm, 'secondForm': secondForm})
 
+@login_required
 def path(request):
     return render(request, 'path.html')
+
+@login_required
+def minitest(request, minitest_id):
+    minitest = MiniTest.objects.get(pk=minitest_id)
+    return render(request, 'minitest.html', {'minitest': minitest})
+
+def minitest_list(request):
+    minitest_list = MiniTest.objects.all()
+    return render(request, 'minitest_list.html', {'minitest_list': minitest_list})
+
+@require_http_methods(['POST'])
+@login_required
+def minitest_submit(request, minitest_id):
+    minitest = MiniTest.objects.get(pk=minitest_id)
+    minitest_result = MiniTestResult(user=request.user, minitest=minitest, score=0, is_passed=False)
+    count_correct = 0
+    score = 0
+    minitest_question_results = []
+    minitest_choice_results = []
+    
+    for question in minitest.question_set.all():
+        answers = list(map(int, request.POST.getlist(f'q{question.number}')))
+        is_correct, q_score = question.score_check(answers)
+        if(is_correct):
+            count_correct += 1
+        score += q_score
+        minitest_question_result = MiniTestQuestionResult(minitest_result=minitest_result, question=question, score=q_score, is_correct=is_correct)
+        minitest_question_results.append(minitest_question_result)
+        choice_set = question.choice_set.filter(number__in=answers)
+        for choice in choice_set:
+            minitest_choice_result = MiniTestChoiceResult(
+                minitest_question_result=minitest_question_result,
+                choice=choice
+            )
+            minitest_choice_results.append(minitest_choice_result)
+
+    if(score >= minitest.pass_score):
+        minitest_result.is_passed = True
+    minitest_result.save()
+    for minitest_question_result in minitest_question_results:
+        minitest_question_result.save()
+    for minitest_choice_result in minitest_choice_results:
+        minitest_choice_result.save()
+        
+    if(minitest_result.is_passed):
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
+
+
+
+
+@require_http_methods(['POST'])
+@login_required
+def upload_minitest(request):
+    if(request.user.is_staff == False):
+        return HttpResponse(status=403)
+    data = json.load(request.FILES['json_file'])
+    minitest = MiniTest(
+        title=data['title'],
+        description=data['description'],
+        pass_score=data['pass_score'],
+    )
+    data_questions = data['questions']
+    questions = []
+    choices = []
+    for i, data_question in enumerate(data_questions):
+        question = Question(
+            minitest=minitest,
+            text=data_question['text'],
+            number=i + 1,
+            choice_type=getattr(QuestionType, data_question['type']),
+            score=data_question['score'],
+        )
+        questions.append(question)
+        
+        for j, data_choice in enumerate(data_question['options']):
+            choice = Choice(
+                question=question,
+                text=data_choice['text'],
+                number=j + 1,
+                is_correct=data_choice.get('is_correct', False),
+            )
+            choices.append(choice)
+            
+    minitest.save()
+    for question in questions:
+        question.save()
+    for choice in choices:
+        choice.save()
+    
+            
+    
+    return HttpResponse(status=200)
+
+    
+    

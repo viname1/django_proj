@@ -1,0 +1,17 @@
+{% comment %} view for MiniTest model {% endcomment %}
+
+<form method="post" action="{% url 'minitest_submit' minitest.id %}">
+    {% csrf_token %}
+    <div class="vstack gap-1">
+        <div class="p-2">
+            {{minitest.title}}
+        </div>
+
+        {% for question in minitest.question_set.all %}
+        <div class="p-1">
+            {% include 'minitest_one_question_block.html' with question=question %}
+        </div>
+        {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+</form>

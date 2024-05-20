@@ -34,5 +34,9 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='login.html', next_page='/profile/'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='logout.html', next_page='/login/'), name='logout'),
     path('avatar_upload/', views.avatar_upload, name='avatar_upload'),
+    path('minitest', views.minitest_list, name='minitest_list'),
+    path('minitest/<int:minitest_id>/', views.minitest, name='minitest_start'),
+    path('minitest_submit/<int:minitest_id>/', views.minitest_submit, name='minitest_submit'),
+    path('minitest/upload', views.upload_minitest, name='upload_minitest'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
