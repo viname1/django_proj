@@ -60,6 +60,22 @@ def profile(
             secondForm = RoleSelectForm()
         return render(request, 'profile.html', {'commonForm': commonForm, 'secondForm': secondForm, 'avatarForm': avatarForm})
 
+def profile_id(request, profile_id):
+    user_seen = UserExtend.objects.get(id=profile_id)
+
+    commonForm = CommonUserForm(instance=user_seen)
+    secondForm = None
+    avatarForm = AvatarForm(instance=user_seen)
+    if(user.role == 1):
+        secondForm = JobSeekerUserForm(instance=JobSeekerUser.objects.get_or_create(user=user_seen, defaults={'about_self': 'Default about text'})[0])
+    elif(user.role == 2):
+        secondForm = RecruiterUserForm(instance=RecruiterUser.objects.get_or_create(user=user_seen)[0])
+    else:
+        secondForm = RoleSelectForm()
+    return render(request, 'profile.html', {'commonForm': commonForm, 'secondForm': secondForm, 'avatarForm': avatarForm, 'ownable': request.user.id==user.id})
+
+
+
 @login_required
 @require_http_methods(['POST'])
 def avatar_upload(
@@ -120,8 +136,13 @@ def minitest(request, minitest_id):
     minitest = MiniTest.objects.get(pk=minitest_id)
     return render(request, 'minitest.html', {'minitest': minitest})
 
+@login_required
 def minitest_list(request):
-    minitest_list = MiniTest.objects.all()
+    user = request.user
+    minitest_list = None
+    if(user.role == 1):
+        job_seeker_user = JobSeekerUser.objects.get(user=user)
+        minitest_list = MiniTest.objects.filter(tags__in=job_seeker_user.speciality.all()).distinct()
     return render(request, 'minitest_list.html', {'minitest_list': minitest_list})
 
 @require_http_methods(['POST'])

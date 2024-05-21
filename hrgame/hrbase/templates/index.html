@@ -4,11 +4,4 @@
 
 {% block content %}
 Пока пусто
-
-<form method="post" action="{% url 'upload_minitest' %}" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="file" name="json_file" accept=".json" class="form-control" id="id_json_file">
-    <button type="submit" class="btn btn-primary btn-block">Upload JSON</button>
-</form>
-
 {% endblock content %}

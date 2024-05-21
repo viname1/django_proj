@@ -1,7 +1,7 @@
 from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import JobSeekerUser, RecruiterUser, UserExtend, ProfileRole
+from .models import JobSeekerUser, RecruiterUser, SpecialityTag, UserExtend, ProfileRole
 
 
 class ProfileCreationForm(UserCreationForm):
@@ -18,7 +18,7 @@ class ProfileCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
-    
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         # self.helper = FormHelper()
@@ -30,17 +30,23 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = UserExtend
         fields = ['last_name', 'first_name', 'patronymic', 'avatar', 'phone_number', 'birthday']
-        
-    
+
+
 class CommonUserForm(forms.ModelForm):
     class Meta:
         model = UserExtend
         fields = ['last_name','first_name', 'patronymic', 'phone_number', 'birthday']
-    
+
 class JobSeekerUserForm(forms.ModelForm):
+    speciality = forms.ModelMultipleChoiceField(
+        queryset=SpecialityTag.objects.all(),
+        required=True,
+        label='Специальность',
+        widget=forms.SelectMultiple(attrs={'data-allow-clear': 'true'})
+    )
     class Meta:
         model = JobSeekerUser
-        fields = ['about_self', 'resume']
+        fields = ['about_self', 'resume', 'speciality']
 
 class RecruiterUserForm(forms.ModelForm):
     class Meta:

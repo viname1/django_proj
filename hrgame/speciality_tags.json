@@ -1,0 +1,59 @@
+{
+    "tags":
+    [
+        { "codename": "it", "name": "IT" },
+
+        { "codename": "python", "name": "Python", "parent": "it" },
+        { "codename": "python_django", "name": "Django", "parent": "python" },
+        { "codename": "python_flask", "name": "Flask", "parent": "python" },
+
+        { "codename": "csharp", "name": "C#", "parent": "it" },
+        { "codename": "csharp_aspnet", "name": "ASP.NET", "parent": "csharp" },
+        { "codename": "csharp_winforms", "name": "WinForms", "parent": "csharp" },
+        { "codename": "csharp_wpf", "name": "WPF", "parent": "csharp" },
+        { "codename": "csharp_avaloniaui", "name": "AvaloniaUI", "parent": "csharp" },
+
+        { "codename": "java", "name": "Java", "parent": "it" },
+        { "codename": "java_jsp", "name": "JSP", "parent": "java" },
+        { "codename": "java_spring", "name": "Spring", "parent": "java" },
+        { "codename": "java_swing", "name": "Swing", "parent": "java" },
+        { "codename": "java_vaadin", "name": "Vaadin", "parent": "java" },
+
+        { "codename": "c", "name": "C", "parent": "it" },
+
+        { "codename": "cpp", "name": "C++", "parent": "it" },
+
+        { "codename": "sql", "name": "SQL", "parent": "it" },
+        { "codename": "sql_mysql", "name": "MySQL", "parent": "sql" },
+        { "codename": "sql_postgresql", "name": "PostgreSQL", "parent": "sql" },
+        { "codename": "sql_microsoft_sql_server", "name": "Microsoft SQL Server", "parent": "sql" },
+        { "codename": "sql_sqlite", "name": "SQLite", "parent": "sql" },
+        { "codename": "sql_firebird", "name": "Firebird", "parent": "sql" },
+
+        { "codename": "html", "name": "HTML", "parent": "it" },
+        { "codename": "css", "name": "CSS", "parent": "it" },
+        { "codename": "javascript", "name": "JavaScript", "parent": "it" },
+
+        { "codename": "it_backend", "name": "Backend", "parent": "it" },
+        { "codename": "it_frontend", "name": "Frontend", "parent": "it" },
+
+        { "codename": "it_fullstack", "name": "Fullstack", "parent": "it" },
+        { "codename": "it_devops", "name": "DevOps", "parent": "it" },
+        { "codename": "it_security", "name": "Безопасность", "parent": "it" },
+        { "codename": "it_support", "name": "Техподдержка", "parent": "it" },
+        { "codename": "it_testing", "name": "Тестирование", "parent": "it" },
+        { "codename": "it_project_management", "name": "Менеджмент проектов", "parent": "it" },
+        { "codename": "it_analytics", "name": "Аналитика", "parent": "it" },
+
+        { "codename": "hr", "name": "HR" },
+        { "codename": "sales", "name": "Продажи" },
+        { "codename": "sales_manager", "name": "Менеджер по продажам", "parent": "sales" },
+        { "codename": "designer", "name": "Дизайнер" },
+        { "codename": "lawyer", "name": "Юрист" },
+        { "codename": "psychologist", "name": "Психолог" },
+        { "codename": "accountant", "name": "Бухгалтер" },
+        { "codename": "tourism", "name": "Туризм" },
+        { "codename": "excursion", "name": "Экскурсовод" }
+
+    ]
+}

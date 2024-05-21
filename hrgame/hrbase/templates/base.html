@@ -11,14 +11,15 @@
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script type="module">
+        import Tags from "https://cdn.jsdelivr.net/gh/lekoala/bootstrap5-tags@master/tags.js";
+        Tags.init("select");
+    </script>
 </head>
 <body>
     <div>
         {% include "navbar.html" %}
         
-        {% if user.is_authenticated %}
-        Привет, {{ user.username }}!
-        {% endif %}
         <div><br></div>
         <div class="container">
             <main>

@@ -2,11 +2,25 @@
 
 {% block content %}
 
+{% if user.is_staff %}
+Загрузить тест
+<form method="post" action="{% url 'upload_minitest' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="json_file" accept=".json" class="form-control" id="id_json_file">
+    <button type="submit" class="btn btn-primary btn-block">Добавить тест</button>
+</form>
+{% endif %}
+
 Для вас доступны следующие тесты:
 <ul class="list-group">
     {% for minitest in minitest_list.all %}
     <li class="list-group-item">
         <a href="{% url 'minitest_start' minitest.id %}">{{ minitest.title }}</a>
+        {% for tag in minitest.tags.all %}
+        <span class="badge bg-secondary">
+            {{ tag }}
+        </span>
+        {% endfor %}
     </li>
     {% endfor %}
 </ul>

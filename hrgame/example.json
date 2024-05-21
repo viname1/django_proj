@@ -1,0 +1,62 @@
+{
+    "minitests": 
+    [
+        {
+            "title": "Опрос",
+            "description": "Описание опроса",
+            "pass_score": 3,
+            "questions":
+            [
+                {
+                    "text": "Вопрос с одним выбором ответа",
+                    "type": "single",
+                    "score": 1,
+                    "options": [
+                        { "text": "Ответ 1" },
+                        { "text": "Ответ 2", "is_correct": true },
+                        { "text": "Ответ 3" },
+                        { "text": "Ответ 4" }
+                    ]
+                },
+                {
+                    "text": "Вопрос со множественным выбором ответа",
+                    "type": "multiple",
+                    "score": 1,
+                    "options": [
+                        { "text": "Ответ 1" },
+                        { "text": "Ответ 2", "is_correct": true },
+                        { "text": "Ответ 3" },
+                        { "text": "Ответ 4", "is_correct": true }
+                    ]
+                },
+                {
+                    "text": "Что такое Django?",
+                    "type": "single",
+                    "score": 1,
+                    "options": [
+                        { "text": "Это язык программирования" },
+                        { "text": "Это база данных" },
+                        { "text": "Это фреймворк для разработки веб-приложений на Python", "is_correct": true },
+                        { "text": "Это текстовый редактор для программистов" }
+                    ]
+                },
+                {
+                    "text": "Какими способами можно создать запрос к базе данных в Django?",
+                    "type": "multiple",
+                    "score": 1,
+                    "options": [
+                        { "text": "Используя методы моделей", "is_correct": true },
+                        { "text": "С помощью ORM (Object-Relational Mapping)", "is_correct": true },
+                        { "text": "Прямо в шаблонах для представлений" },
+                        { "text": "Используя admin интерфейс" }
+                    ]
+                }
+            ],
+            "tags":
+            [
+                "python",
+                "python_django"
+            ]
+        }
+    ]
+}

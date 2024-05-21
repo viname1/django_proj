@@ -56,9 +56,12 @@ class QuestionType(models.IntegerChoices):
 
 #region models
 class SpecialityTag(models.Model):
-    codename = models.CharField(max_length=100, verbose_name='Кодовое имя')
-    name = models.CharField(max_length=100, verbose_name='Название')
+    codename = models.CharField(max_length=100, verbose_name='Кодовое имя', unique=True)
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Родитель', related_name='children')
+    
+    def __str__(self):
+        return self.name
 
 class UserManagerExtend(UserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -97,9 +100,19 @@ class JobSeekerUser(models.Model):
 class RecruiterUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE)
 
-class Speciality(models.Model):
+# class Speciality(models.Model):
+#     name = models.TextField(verbose_name='Название')
+#     description = models.TextField(blank=True, verbose_name='Описание')
+
+class Company(models.Model):
     name = models.TextField(verbose_name='Название')
     description = models.TextField(blank=True, verbose_name='Описание')
+
+class RecruiterCompanyLink(models.Model):
+    user = models.ForeignKey(RecruiterUser, on_delete=models.CASCADE, verbose_name='Пользователь')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='Компания')
+    can_add_test = models.BooleanField(default=False, verbose_name='Доступность добавления теста')
+    is_company_admin = models.BooleanField(default=False, verbose_name='Администратор компании')
 
 #region test
 class MiniTest(models.Model):
@@ -107,14 +120,60 @@ class MiniTest(models.Model):
     description = models.TextField(blank=True, verbose_name='Описание')
     pass_score = models.IntegerField(default=0, verbose_name='Порог прохождения')
     max_score = models.IntegerField(default=0, verbose_name='Максимальное количество баллов')
-    # points = models.IntegerField(default=0, verbose_name='Очки за тест')
+    points = models.IntegerField(default=0, verbose_name='Очки за тест')
+    tags = models.ManyToManyField(SpecialityTag, blank=True, verbose_name='Теги')
+    author = models.ForeignKey(RecruiterUser, on_delete=models.SET_NULL, verbose_name='Автор', related_name='minitest_set', blank=True, null=True)
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, verbose_name='Компания', related_name='minitest_set', blank=True, null=True)
     
-    def create_from_json_data(data):
-        minitest = MiniTest(
-            title = data['title'],
-            description = data['description'],
-            pass_score = data['pass_score'],
-        )
+    def create_from_json_data(data, user=None, company=None):
+        minitests = []
+        if "minitests" not in data:
+            data = {"minitests": [data]}
+            
+        for data_minitest in data["minitests"]:
+            minitest = MiniTest(
+                title=data_minitest['title'],
+                description=data_minitest['description'],
+                pass_score=data_minitest['pass_score'],
+                points=data_minitest['points'],
+                author=user,
+                company=company
+            )
+            data_questions = data_minitest['questions']
+            questions = []
+            choices = []
+            
+            for tag in data_minitest['tags']:
+                speciality_tag = SpecialityTag.objects.get(codename=tag)
+                minitest.tags.add(speciality_tag)
+
+            for i, data_question in enumerate(data_questions):
+                question = Question(
+                    minitest=minitest,
+                    text=data_question['text'],
+                    number=i + 1,
+                    choice_type=getattr(QuestionType, data_question['type']),
+                    score=data_question['score'],
+                )
+                questions.append(question)
+                
+                for j, data_choice in enumerate(data_question['options']):
+                    choice = Choice(
+                        question=question,
+                        text=data_choice['text'],
+                        number=j + 1,
+                        is_correct=data_choice.get('is_correct', False),
+                    )
+                    choices.append(choice)
+
+            minitest.save()
+            for question in questions:
+                question.save()
+            for choice in choices:
+                choice.save()
+            minitests.append(minitest)
+
+        return minitests
         
 
 class Question(models.Model):
@@ -123,7 +182,6 @@ class Question(models.Model):
     text = models.TextField(verbose_name='Текст вопроса')
     choice_type = models.IntegerField(choices=QuestionType.choices,  default=QuestionType.single, verbose_name='Тип вопроса')
     score = models.IntegerField(default=1, verbose_name='Баллы за вопрос')
-    tags = models.ManyToManyField(SpecialityTag, blank=True, verbose_name='Теги')
     
     def score_check(self, choices):
         if self.choice_type == QuestionType.single:
@@ -169,7 +227,6 @@ class MiniTestResult(models.Model):
 class MiniTestQuestionResult(models.Model):
     minitest_result = models.ForeignKey(MiniTestResult, on_delete=models.CASCADE, related_name='mini_test_question_result_set')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    # choices = models.ManyToManyField('Choice', blank=True, verbose_name='Выбранные варианты')
     score = models.IntegerField()
     is_correct = models.BooleanField(default=False)
 
