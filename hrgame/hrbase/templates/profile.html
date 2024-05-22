@@ -52,6 +52,7 @@
                 {% if user.role == 1 %}
                     <p>О себе: {{ user.job_seeker.about_self }}</p>
                 {% elif user.role == 2 %}
+                <p>Компания: {{ user.recruiter.company }}</p>
                 {% endif %}
                 <hr>
             </div>

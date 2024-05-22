@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Компания{% endblock title %}
+{% block header %}Компания{% endblock header %}
+
+{% block content %}
+<h1>Компания</h1>
+<h2>{{ company.name }}</h2>
+<p>{{ company.description }}</p>
+
+<p>Сотрудники: {{ company.recruiter_link_set.count }}</p>
+{% for user in company.recruiter_link_set.filter(show_in_company_list=True) %}
+{{ user }}<br>
+{% endfor %}
+{% endblock content %}

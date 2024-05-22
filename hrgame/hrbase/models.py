@@ -47,11 +47,28 @@ class QuestionType(models.IntegerChoices):
     
     @classmethod
     def string_to_int(cls, the_string):
-        """Convert the string value to an int value, or return None."""
         for num, string in cls.choices:
             if string == the_string:
                 return num
         return None
+    
+class VacancyRequestStatus(models.IntegerChoices):
+    open = 1, 'Открыто'
+    interview = 2, 'Собеседование'
+    rejected = 3, 'Отказ'
+    accepted = 4, 'Принято'
+    cancelled_by_user = 5, 'Отменено пользователем'
+    
+    def choicesValues(self):
+        return [(i.value, i.label) for i in self]
+    
+    @classmethod
+    def string_to_int(cls, the_string):
+        for num, string in cls.choices:
+            if string == the_string:
+                return num
+        return None
+    
 #endregion  
 
 #region models
@@ -89,31 +106,47 @@ class UserExtend(AbstractUser, PermissionsMixin):
 class JobSeekerUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE, related_name='job_seeker')
     about_self = models.TextField(blank=True, verbose_name='О себе')
-    score = models.IntegerField(default=0, verbose_name='Рейтинг')
-    level = models.IntegerField(default=1, verbose_name='Уровень')
+    # score = models.IntegerField(default=0, verbose_name='Рейтинг')
+    level = models.IntegerField(default=1, verbose_name='"Уровень"')
     resume = models.FileField(
         upload_to=RandomFileName('resumes/'),
         blank=True,
         verbose_name='Резюме')
     speciality = models.ManyToManyField(SpecialityTag, blank=True, verbose_name='Специальность')
+    
+    @property
+    def score(self):
+        return self.minitest_result_set.filter(is_actual=True, minitest__tags__in=self.speciality.all()).aggregate(models.Sum('score'))
 
 class RecruiterUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE)
 
-# class Speciality(models.Model):
-#     name = models.TextField(verbose_name='Название')
-#     description = models.TextField(blank=True, verbose_name='Описание')
-
 class Company(models.Model):
     name = models.TextField(verbose_name='Название')
     description = models.TextField(blank=True, verbose_name='Описание')
+    is_active = models.BooleanField(default=True, verbose_name='Активность')
 
 class RecruiterCompanyLink(models.Model):
-    user = models.ForeignKey(RecruiterUser, on_delete=models.CASCADE, verbose_name='Пользователь')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='Компания')
+    user = models.ForeignKey(RecruiterUser, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='company_link_set')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='Компания', related_name='recruiter_link_set')
     can_add_test = models.BooleanField(default=False, verbose_name='Доступность добавления теста')
     is_company_admin = models.BooleanField(default=False, verbose_name='Администратор компании')
+    show_in_company_list = models.BooleanField(default=True, verbose_name='Отображать в списке компании')
 
+class Vacancy(models.Model):
+    title = models.CharField(max_length=100, verbose_name='Название')
+    description = models.TextField(blank=True, verbose_name='Описание')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='Компания', related_name='vacancy_set')
+    tags = models.ManyToManyField(SpecialityTag, blank=True, verbose_name='Теги')
+    is_open = models.BooleanField(default=True, verbose_name='Открыта ли вакансия')
+    
+class VacancyRequest(models.Model):
+    user = models.ForeignKey(JobSeekerUser, on_delete=models.DO_NOTHING, verbose_name='Пользователь', related_name='vacancy_application_set')
+    recruiter = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Рассматривающий запрос', related_name='vacancy_application_set', blank=True, null=True)
+    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, verbose_name='Вакансия', related_name='vacancy_application_set')
+    date = models.DateTimeField(auto_now_add=True, verbose_name='Дата запроса')
+    status = models.IntegerField(default=VacancyRequestStatus.open, verbose_name='Статус', choices=VacancyRequestStatus.choices)
+    
 #region test
 class MiniTest(models.Model):
     title = models.CharField(max_length=100, verbose_name='Название')
@@ -122,8 +155,9 @@ class MiniTest(models.Model):
     max_score = models.IntegerField(default=0, verbose_name='Максимальное количество баллов')
     points = models.IntegerField(default=0, verbose_name='Очки за тест')
     tags = models.ManyToManyField(SpecialityTag, blank=True, verbose_name='Теги')
-    author = models.ForeignKey(RecruiterUser, on_delete=models.SET_NULL, verbose_name='Автор', related_name='minitest_set', blank=True, null=True)
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, verbose_name='Компания', related_name='minitest_set', blank=True, null=True)
+    author = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Автор', related_name='minitest_set', blank=True, null=True)
+    company = models.ForeignKey(Company, on_delete=models.DO_NOTHING, verbose_name='Компания', related_name='minitest_set', blank=True, null=True)
+    custom = models.BooleanField(default=False, verbose_name='Пользовательский тест')
     
     def create_from_json_data(data, user=None, company=None):
         minitests = []
@@ -215,24 +249,29 @@ class Choice(models.Model):
     number = models.IntegerField(verbose_name='Номер варианта')
     text = models.TextField(verbose_name='Текст варианта')
     is_correct = models.BooleanField(default=False, verbose_name='Правильный вариант')
-    
+
 class MiniTestResult(models.Model):
-    user = models.ForeignKey(JobSeekerUser, on_delete=models.CASCADE, related_name='mini_test_result_set')
-    minitest = models.ForeignKey(MiniTest, on_delete=models.CASCADE, related_name='mini_test_result_set')
-    score = models.IntegerField()
-    is_passed = models.BooleanField()
-    date = models.DateTimeField(auto_now_add=True)
-    count_correct = models.IntegerField()
+    user = models.ForeignKey(JobSeekerUser, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='mini_test_result_set')
+    minitest = models.ForeignKey(MiniTest, on_delete=models.CASCADE, verbose_name='Тест', related_name='mini_test_result_set')
+    score = models.IntegerField(default=0, verbose_name='Баллы за тест')
+    is_passed = models.BooleanField(default=False, verbose_name='Пройден ли тест')
+    date = models.DateTimeField(auto_now_add=True, verbose_name='Дата прохождения')
+    count_correct = models.IntegerField(default=0, verbose_name='Количество правильных ответов')
+    is_actual = models.BooleanField(default=True, verbose_name='Актуальность результата')
+    
+    @property
+    def tags(self):
+        return self.minitest.tags
 
 class MiniTestQuestionResult(models.Model):
-    minitest_result = models.ForeignKey(MiniTestResult, on_delete=models.CASCADE, related_name='mini_test_question_result_set')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    score = models.IntegerField()
-    is_correct = models.BooleanField(default=False)
+    minitest_result = models.ForeignKey(MiniTestResult, on_delete=models.CASCADE, verbose_name='Тест', related_name='mini_test_question_result_set')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='mini_test_question_result_set')
+    score = models.IntegerField(default=0, verbose_name='Баллы за вопрос')
+    is_correct = models.BooleanField(default=False, verbose_name='Правильность ответа')
 
 class MiniTestChoiceResult(models.Model):
-    minitest_question_result = models.ForeignKey(MiniTestQuestionResult, on_delete=models.CASCADE, related_name='mini_test_choice_result_set')
-    choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
+    minitest_question_result = models.ForeignKey(MiniTestQuestionResult, on_delete=models.CASCADE, verbose_name='Вопрос', related_name='mini_test_choice_result_set')
+    choice = models.ForeignKey(Choice, on_delete=models.CASCADE, verbose_name='Вариант', related_name='mini_test_choice_result_set')
 
 #endregion test
 

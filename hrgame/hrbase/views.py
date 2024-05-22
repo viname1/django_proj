@@ -142,7 +142,7 @@ def minitest_list(request):
     minitest_list = None
     if(user.role == 1):
         job_seeker_user = JobSeekerUser.objects.get(user=user)
-        minitest_list = MiniTest.objects.filter(tags__in=job_seeker_user.speciality.all()).distinct()
+        minitest_list = MiniTest.objects.filter(tags__in=job_seeker_user.speciality.all(), custom=False).distinct()
     return render(request, 'minitest_list.html', {'minitest_list': minitest_list})
 
 @require_http_methods(['POST'])

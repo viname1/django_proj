@@ -21,7 +21,7 @@
             ],
             "django": true,
             "autoStartBrowser": true,
-            "program": "${workspaceFolder}\\hrgame\\manage.py"
+            "program": "${workspaceFolder}/hrgame/manage.py"
         }
     ]
 }
