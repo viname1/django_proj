@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_bootstrap5 %}
+{% load call_method %}
 {% block title %}Компания{% endblock title %}
 {% block header %}Компания{% endblock header %}
 
@@ -9,7 +10,8 @@
 <p>{{ company.description }}</p>
 
 <p>Сотрудники: {{ company.recruiter_link_set.count }}</p>
-{% for user in company.recruiter_link_set.filter(show_in_company_list=True) %}
+{% call_method_json company.recruiter_link_set 'filter' '{"show_in_company_list":true}' as users %}
+{% for user in users %}
 {{ user }}<br>
 {% endfor %}
 {% endblock content %}

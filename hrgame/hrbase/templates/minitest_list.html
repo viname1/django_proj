@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load call_method %}
 {% block content %}
 
 {% if user.is_staff %}
@@ -16,6 +16,32 @@
     {% for minitest in minitest_list.all %}
     <li class="list-group-item">
         <a href="{% url 'minitest_start' minitest.id %}">{{ minitest.title }}</a>
+        {% comment %}         
+        {% with minitest_id=minitest.id user_id=user.id %}
+        {% with minitest_result=MiniTestResult.objects.filter(user_id=user_id, minitest_id=minitest_id, is_actual=True).first as minitest_result %}
+        {% endcomment %}
+        {% comment %} {% with minitest_result=minitest.actual_result user=user.job_seeker %} {% endcomment %}
+        {% call_method minitest 'actual_result' user.job_seeker as minitest_result %}
+        {% if minitest_result %}
+            ({{ minitest_result.score }}/{{ minitest.pass_score }})
+            
+            {% if minitest_result.is_passed %}
+                <span class="badge bg-success">
+                    Пройден успешно
+                </span>
+            {% else %}
+                <span class="badge bg-danger">
+                    Не пройден
+                </span>
+            {% endif %}
+        {% else %}
+            <span class="badge bg-info">
+                Новый
+            </span>
+        {% endif %}        
+
+
+        {% comment %} {% endwith %} {% endcomment %}
         {% for tag in minitest.tags.all %}
         <span class="badge bg-secondary">
             {{ tag }}

@@ -145,6 +145,7 @@ class VacancyRequest(models.Model):
     recruiter = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Рассматривающий запрос', related_name='vacancy_application_set', blank=True, null=True)
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, verbose_name='Вакансия', related_name='vacancy_application_set')
     date = models.DateTimeField(auto_now_add=True, verbose_name='Дата запроса')
+    date_of_interview = models.DateTimeField(blank=True, null=True, verbose_name='Дата собеседования')
     status = models.IntegerField(default=VacancyRequestStatus.open, verbose_name='Статус', choices=VacancyRequestStatus.choices)
     
 #region test
@@ -158,6 +159,9 @@ class MiniTest(models.Model):
     author = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Автор', related_name='minitest_set', blank=True, null=True)
     company = models.ForeignKey(Company, on_delete=models.DO_NOTHING, verbose_name='Компания', related_name='minitest_set', blank=True, null=True)
     custom = models.BooleanField(default=False, verbose_name='Пользовательский тест')
+    
+    def actual_result(self, user):
+        return MiniTestResult.objects.filter(minitest=self, user=user, is_actual=True).first()
     
     def create_from_json_data(data, user=None, company=None):
         minitests = []

@@ -39,5 +39,7 @@ urlpatterns = [
     path('minitest/<int:minitest_id>/', views.minitest, name='minitest_start'),
     path('minitest_submit/<int:minitest_id>/', views.minitest_submit, name='minitest_submit'),
     path('minitest/upload', views.upload_minitest, name='upload_minitest'),
+    path('company', views.company_list, name='company_list'),
+    path('company/<int:company_id>/', views.company_id, name='company_id'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

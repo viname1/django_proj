@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from hrbase.models import UserExtend, MiniTest, Question, Choice, SpecialityTag
+from hrbase.models import Company, MiniTestResult, UserExtend, MiniTest, Question, Choice, SpecialityTag
 
 
 
@@ -15,3 +15,5 @@ admin.site.register(MiniTest)
 admin.site.register(Question)
 admin.site.register(Choice)
 admin.site.register(SpecialityTag)
+admin.site.register(MiniTestResult)
+admin.site.register(Company)

@@ -8,7 +8,7 @@ from hrbase.forms import AvatarForm, CommonUserForm, JobSeekerUserForm, Recruite
 from hrbase.models import JobSeekerUser, RecruiterUser
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from .models import Choice, MiniTest, MiniTestChoiceResult, MiniTestQuestionResult, MiniTestResult, Question, QuestionType
+from .models import Choice, Company, MiniTest, MiniTestChoiceResult, MiniTestQuestionResult, MiniTestResult, Question, QuestionType
 
 
 # Create your views here.
@@ -149,7 +149,7 @@ def minitest_list(request):
 @login_required
 def minitest_submit(request, minitest_id):
     minitest = MiniTest.objects.get(pk=minitest_id)
-    minitest_result = MiniTestResult(user=request.user, minitest=minitest, score=0, is_passed=False)
+    minitest_result = MiniTestResult(user=request.user.job_seeker, minitest=minitest, score=0, is_passed=False, is_actual=True)
     count_correct = 0
     score = 0
     minitest_question_results = []
@@ -173,6 +173,9 @@ def minitest_submit(request, minitest_id):
 
     if(score >= minitest.pass_score):
         minitest_result.is_passed = True
+    
+    MiniTestResult.objects.filter(minitest=minitest, user=minitest_result.user, is_actual=True).exclude(pk=minitest_result.pk).update(is_actual=False)
+    
     minitest_result.save()
     for minitest_question_result in minitest_question_results:
         minitest_question_result.save()
@@ -231,4 +234,9 @@ def upload_minitest(request):
     return HttpResponse(status=200)
 
     
-    
+def company_list(request):
+    return render(request, 'company_list.html')
+
+def company_id(request, company_id):
+    company = Company.objects.get(pk=company_id)
+    return render(request, 'company.html', {'company': company})
