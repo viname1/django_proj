@@ -2,10 +2,13 @@
 {% load call_method %}
 {% block content %}
 
-{% if user.is_staff %}
+{% if can_edit_test %}
 Загрузить тест
 <form method="post" action="{% url 'upload_minitest' %}" enctype="multipart/form-data">
     {% csrf_token %}
+    {% if company %}
+        <input type="hidden" name="company" value="{{ company.id }}">
+    {% endif %}
     <input type="file" name="json_file" accept=".json" class="form-control" id="id_json_file">
     <button type="submit" class="btn btn-primary btn-block">Добавить тест</button>
 </form>
@@ -21,6 +24,7 @@
         {% with minitest_result=MiniTestResult.objects.filter(user_id=user_id, minitest_id=minitest_id, is_actual=True).first as minitest_result %}
         {% endcomment %}
         {% comment %} {% with minitest_result=minitest.actual_result user=user.job_seeker %} {% endcomment %}
+        {% if user.role == 1 %}
         {% call_method minitest 'actual_result' user.job_seeker as minitest_result %}
         {% if minitest_result %}
             ({{ minitest_result.score }}/{{ minitest.pass_score }})
@@ -39,6 +43,7 @@
                 Новый
             </span>
         {% endif %}        
+        {% endif %}
 
 
         {% comment %} {% endwith %} {% endcomment %}

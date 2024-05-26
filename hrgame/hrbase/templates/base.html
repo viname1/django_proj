@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {# Load the tag library #}
 {% load django_bootstrap5 %}
-<html data-bs-theme="dark">
+<html data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,6 +15,18 @@
         import Tags from "https://cdn.jsdelivr.net/gh/lekoala/bootstrap5-tags@master/tags.js";
         Tags.init("select");
     </script>
+    <style>
+        .drop-zone {
+            border: 2px dashed #007bff;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            color: #007bff;
+        }
+        .drop-zone.dragover {
+            background-color: #e9ecef;
+        }
+    </style>
 </head>
 <body>
     <div>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% load call_method %}
+{% block title %}Компании{% endblock title %}
+{% block header %}Компании{% endblock header %}
+
+{% block content %}
+
+{% if user.role == 2 %}
+<a href="{% url 'company_create' %}">Создать компанию</a>
+{% endif %}
+
+<h1>Список компаний</h1>
+
+{% for company in company_list %}
+<h2><a href="{% url 'company_id' company.id %}">{{ company.name }}</a></h2>
+<p>{{ company.description }}</p>
+{% endfor %}
+
+{% endblock content %}

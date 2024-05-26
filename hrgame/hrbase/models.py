@@ -102,6 +102,10 @@ class UserExtend(AbstractUser, PermissionsMixin):
         default = ProfileRole.notSelected.value,
         verbose_name='Тип профиля')
     objects = UserManagerExtend()
+    
+    @property
+    def FIO(self):
+        return f'{self.last_name} {self.first_name} {self.patronymic}'
 
 class JobSeekerUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE, related_name='job_seeker')
@@ -121,15 +125,64 @@ class JobSeekerUser(models.Model):
 class RecruiterUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE)
 
+    def create_new_company(self, name):
+        company=Company.objects.create(name=name, owner=self)
+        RecruiterCompanyLink.objects.create(user=self, company=company, can_edit_test=True, can_edit_vacancy=True, is_company_admin=True)
+        return company
+    
+    def add_recruiter_company(self, other_recruiter, company):
+        link=self.company_link_set.filter(company=company).first()
+        if link and link.is_company_admin:
+            other_link, created = RecruiterCompanyLink.objects.get_or_create(user=other_recruiter, company=company)
+            if not created:
+                raise Exception('Пользователь уже в этой компании')
+            return other_link
+        else:
+            raise Exception('Недостаточно прав для добавления пользователя в компанию')
+        
+    def remove_recruiter_company(self, other_recruiter, company):
+        link=self.company_link_set.filter(company=company).first()
+        if link and link.is_company_admin:
+            other_link = other_recruiter.company_link_set.filter(company=company).first()
+            if other_link:
+                other_link.delete()
+            else:
+                raise Exception('Пользователь не в этой компании')
+            return other_link
+        else:
+            raise Exception('Недостаточно прав для удаления пользователя из компании')
+        
+    def add_test_company(self, company, minitest_json):
+        link=self.company_link_set.filter(company=company).first()
+        if link and (link.is_company_admin or link.can_edit_test):
+            return MiniTest.create_from_json_data(minitest_json, self, company)
+        else:
+            raise Exception('Недостаточно прав для добавления теста в компанию')
+        
+    def add_vacancy_company(self, company, **kwargs):
+        link=self.company_link_set.filter(company=company).first()
+        if link and link.can_edit_vacancy:
+            return Vacancy.objects.create(self, **kwargs)
+        else:
+            raise Exception('Недостаточно прав для добавления вакансии в компанию')
+
+class ResumeDocument(models.Model):
+    file = models.FileField(upload_to=RandomFileName('resumes/'), verbose_name='Резюме')
+    filename = models.TextField()
+    user = models.ForeignKey(JobSeekerUser, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='resume_document_set')
+    visible = models.BooleanField(default=True, verbose_name='Показывать резюме')
+
 class Company(models.Model):
     name = models.TextField(verbose_name='Название')
     description = models.TextField(blank=True, verbose_name='Описание')
     is_active = models.BooleanField(default=True, verbose_name='Активность')
+    owner = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Владелец', related_name='owner_company_set', blank=True, null=True)
 
 class RecruiterCompanyLink(models.Model):
     user = models.ForeignKey(RecruiterUser, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='company_link_set')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='Компания', related_name='recruiter_link_set')
-    can_add_test = models.BooleanField(default=False, verbose_name='Доступность добавления теста')
+    can_edit_test = models.BooleanField(default=False, verbose_name='Доступность редактирования тестов')
+    can_edit_vacancy = models.BooleanField(default=False, verbose_name='Доступность редактирования вакансии')
     is_company_admin = models.BooleanField(default=False, verbose_name='Администратор компании')
     show_in_company_list = models.BooleanField(default=True, verbose_name='Отображать в списке компании')
 
@@ -175,16 +228,13 @@ class MiniTest(models.Model):
                 pass_score=data_minitest['pass_score'],
                 points=data_minitest['points'],
                 author=user,
-                company=company
+                company=company,
+                custom=company is not None
             )
             data_questions = data_minitest['questions']
             questions = []
             choices = []
             
-            for tag in data_minitest['tags']:
-                speciality_tag = SpecialityTag.objects.get(codename=tag)
-                minitest.tags.add(speciality_tag)
-
             for i, data_question in enumerate(data_questions):
                 question = Question(
                     minitest=minitest,
@@ -209,7 +259,13 @@ class MiniTest(models.Model):
                 question.save()
             for choice in choices:
                 choice.save()
+                
+            for tag in data_minitest['tags']:
+                speciality_tag = SpecialityTag.objects.get(codename=tag)
+                minitest.tags.add(speciality_tag)
+            minitest.save()
             minitests.append(minitest)
+            
 
         return minitests
         

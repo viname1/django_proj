@@ -1,15 +1,15 @@
 import json
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render, HttpResponse, redirect
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 User = settings.AUTH_USER_MODEL
 from django.contrib.auth import authenticate, login
-from hrbase.forms import AvatarForm, CommonUserForm, JobSeekerUserForm, RecruiterUserForm, ProfileCreationForm, ProfileUpdateForm, RoleSelectForm
+from hrbase.forms import AvatarForm, CommonUserForm, CompanyForm, JobSeekerUserForm, RecruiterUserForm, ProfileCreationForm, ProfileUpdateForm, ResumeDocumentForm, RoleSelectForm, VacancyForm
 from hrbase.models import JobSeekerUser, RecruiterUser
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from .models import Choice, Company, MiniTest, MiniTestChoiceResult, MiniTestQuestionResult, MiniTestResult, Question, QuestionType
-
+from .models import Choice, Company, MiniTest, MiniTestChoiceResult, MiniTestQuestionResult, MiniTestResult, Question, QuestionType, RecruiterCompanyLink, ResumeDocument, UserExtend, Vacancy
 
 # Create your views here.
 
@@ -66,15 +66,13 @@ def profile_id(request, profile_id):
     commonForm = CommonUserForm(instance=user_seen)
     secondForm = None
     avatarForm = AvatarForm(instance=user_seen)
-    if(user.role == 1):
+    if(user_seen.role == 1):
         secondForm = JobSeekerUserForm(instance=JobSeekerUser.objects.get_or_create(user=user_seen, defaults={'about_self': 'Default about text'})[0])
-    elif(user.role == 2):
+    elif(user_seen.role == 2):
         secondForm = RecruiterUserForm(instance=RecruiterUser.objects.get_or_create(user=user_seen)[0])
     else:
         secondForm = RoleSelectForm()
-    return render(request, 'profile.html', {'commonForm': commonForm, 'secondForm': secondForm, 'avatarForm': avatarForm, 'ownable': request.user.id==user.id})
-
-
+    return render(request, 'profile.html', {'user_seen': user_seen, 'commonForm': commonForm, 'secondForm': secondForm, 'avatarForm': avatarForm, 'ownable': request.user.id==user_seen.id})
 
 @login_required
 @require_http_methods(['POST'])
@@ -87,6 +85,25 @@ def avatar_upload(
         return redirect('profile')
     else:
         return HttpResponse(status=400, content='Введены некорректные данные: ' + str(form.errors))
+
+def resume_list(request, user_id=None):
+    if user_id is None:
+        user_id = request.user.id
+    resume_list = ResumeDocument.objects.filter(user=user_id)
+    owner = JobSeekerUser.objects.get(id=user_id)
+    return render(request, 'resume_list.html', {'resume_list': resume_list, 'owner': owner, 'ownable': request.user.id==user_id})
+
+def resume_upload(request):
+    if request.method == 'POST':
+        request.POST._mutable = True
+        request.POST['user'] = request.user
+        form = ResumeDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            resume=form.save()
+            return JsonResponse({'message': 'File uploaded successfully!'})
+        else:
+            return JsonResponse({'error': 'Invalid form data.'})
+    return redirect('resume_list')
 
 @login_required
 def profile_edit(
@@ -193,50 +210,102 @@ def minitest_submit(request, minitest_id):
 @require_http_methods(['POST'])
 @login_required
 def upload_minitest(request):
-    if(request.user.is_staff == False):
-        return HttpResponse(status=403)
-    data = json.load(request.FILES['json_file'])
-    minitest = MiniTest(
-        title=data['title'],
-        description=data['description'],
-        pass_score=data['pass_score'],
-    )
-    data_questions = data['questions']
-    questions = []
-    choices = []
-    for i, data_question in enumerate(data_questions):
-        question = Question(
-            minitest=minitest,
-            text=data_question['text'],
-            number=i + 1,
-            choice_type=getattr(QuestionType, data_question['type']),
-            score=data_question['score'],
-        )
-        questions.append(question)
-        
-        for j, data_choice in enumerate(data_question['options']):
-            choice = Choice(
-                question=question,
-                text=data_choice['text'],
-                number=j + 1,
-                is_correct=data_choice.get('is_correct', False),
-            )
-            choices.append(choice)
-            
-    minitest.save()
-    for question in questions:
-        question.save()
-    for choice in choices:
-        choice.save()
+    company_id=request.POST['company']
+    minitest=None
+    if company_id:
+        company = Company.objects.get(pk=company_id)
+        request.user.recruiteruser.add_test_company(company, json.load(request.FILES['json_file']))
+    else:
+        if request.user.is_staff == False:
+            return HttpResponse(status=403)
+        MiniTest.create_from_json_data(json.load(request.FILES['json_file']))
     
-            
-    
-    return HttpResponse(status=200)
+    if company_id:
+        return redirect('company_minitest_list', company_id=company_id)
+    else:
+        return redirect('minitest_list')
 
     
 def company_list(request):
-    return render(request, 'company_list.html')
+    return render(request, 'company_list.html', {'company_list': Company.objects.all()})
 
 def company_id(request, company_id):
     company = Company.objects.get(pk=company_id)
     return render(request, 'company.html', {'company': company})
+
+def company_vacancy_list(request, company_id):
+    company = Company.objects.get(pk=company_id)
+    vacancy_list = Vacancy.objects.filter(company=company, is_open=True).all()
+    return render(request, 'vacancy_list.html', {'company': company, 'vacancy_list': vacancy_list})
+
+def company_minitest_list(request, company_id):
+    company = Company.objects.get(pk=company_id)
+    minitest_list = MiniTest.objects.filter(company=company).all()
+    can_edit_test = False
+    if(request.user.is_staff):
+        can_edit_test = True
+    if(request.user.role == 2):
+        link = RecruiterCompanyLink.objects.filter(user=request.user.recruiteruser, company=company).first()
+        can_edit_test = link and (link.is_company_admin or link.can_edit_test)
+    return render(request, 'minitest_list.html', {'company': company, 'minitest_list': minitest_list, 'can_edit_test': can_edit_test})
+
+def company_create(request):
+    if request.method == 'POST':
+        form = CompanyForm(request.POST, owner=request.user)
+        if form.is_valid():
+            company = form.save()
+            RecruiterCompanyLink.objects.create(
+                user=request.user.recruiteruser,
+                company=company,
+                is_company_admin=True,
+            )
+            return redirect('company_list')
+    else:
+        form = CompanyForm()
+    return render(request, 'company_create.html', {'form': form})
+
+def vacancy_list(request):
+    vacancy_list = Vacancy.objects.all()
+    return render(request, 'vacancy_list.html', {'vacancy_list': vacancy_list})
+
+def vacancy_id(request, vacancy_id):
+    vacancy = Vacancy.objects.get(pk=vacancy_id)
+    company = Company.objects.get(pk=vacancy.company_id)
+    return render(request, 'vacancy.html', {'vacancy': vacancy, 'company': company})
+
+@login_required
+def vacancy_create(request, company_id):
+    user = request.user.recruiteruser
+    company = Company.objects.get(pk=company_id)
+    link = RecruiterCompanyLink.objects.filter(user=user, company=company).first()
+    if not link or not(link.is_company_admin or link.can_add_vacancy):
+        return HttpResponse(status=403, content="У вас нет прав создавать вакансии на данную компанию")
+    if request.method == 'POST':
+        form = VacancyForm(request.POST, user=user, company=Company.objects.get(pk=company_id))
+        if form.is_valid():
+            form.save()
+            return redirect('company_vacancy_list', company_id=company_id)
+    else:
+        form = VacancyForm(user=user)
+    
+    return render(request, 'vacancy_create.html', {'form': form})
+
+@login_required
+def create_company(request):
+    user = request.user
+    if user.role != 2:
+        return HttpResponse(status=403)
+    if request.method == 'POST':
+        form = CompanyForm(request.POST)
+        if form.is_valid():
+            company = form.save()
+            RecruiterCompanyLink.objects.create(
+                user=user.recruiteruser,
+                company=company,
+                is_company_admin=True,
+                can_add_test=True
+            )
+            return redirect('company_detail', company_id=company.id)
+    else:
+        form = CompanyForm()
+    return render(request, 'create_company.html', {'form': form})

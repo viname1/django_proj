@@ -5,6 +5,7 @@
             "title": "Опрос",
             "description": "Описание опроса",
             "pass_score": 3,
+            "points": 100,
             "questions":
             [
                 {

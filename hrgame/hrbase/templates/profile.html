@@ -18,8 +18,9 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="dropdown">
+                    {% if ownable %}
                     <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if user.avatar %}
+                        {% if user_seen.avatar %}
                             <img src="{{ user.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid" title="Нажмите, чтобы изменить аватарку">
                         {% else %}
                             <div role="button">
@@ -42,22 +43,33 @@
                             </div>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user_seen.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid">
+                        {% else %}
+                            <div role="button">
+                                <small class="text-muted">Без аватарки</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
               
                 <hr>
-                <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-                <p>EMAIL: {{ user.email }}</p>
-                <p>Роль: {% if user.role == 1 %}Соискатель{% elif user.role == 2 %}Рекрутер{% endif %}</p>
+                <h3>{{ user_seen.first_name }} {{ user_seen.last_name }}</h3>
+                <p>EMAIL: {{ user_seen.email }}</p>
+                <p>Роль: {% if user_seen.role == 1 %}Соискатель{% elif user_seen.role == 2 %}Рекрутер{% endif %}</p>
                 {% comment %} В зависимости от роли можно добавить разного {% endcomment %}
-                {% if user.role == 1 %}
-                    <p>О себе: {{ user.job_seeker.about_self }}</p>
-                {% elif user.role == 2 %}
-                <p>Компания: {{ user.recruiter.company }}</p>
+                {% if user_seen.role == 1 %}
+                    <p>О себе: {{ user_seen.job_seeker.about_self }}</p>
+                {% elif user_seen.role == 2 %}
+                <p>Компания: {{ user_seen.recruiter.company }}</p>
                 {% endif %}
                 <hr>
             </div>
             <div class="col-md-8">
-                <p>{{ user.profile.about_self }}</p>
+                <p>{{ user_seen.profile.about_self }}</p>
             </div>
         </div>
     {% endif %}

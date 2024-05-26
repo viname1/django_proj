@@ -9,9 +9,13 @@
 <h2>{{ company.name }}</h2>
 <p>{{ company.description }}</p>
 
-<p>Сотрудники: {{ company.recruiter_link_set.count }}</p>
-{% call_method_json company.recruiter_link_set 'filter' '{"show_in_company_list":true}' as users %}
-{% for user in users %}
-{{ user }}<br>
+<p>Сотрудники:</p>
+{% call_method_json company.recruiter_link_set 'filter' '{"show_in_company_list":true}' as recruiter_links %}
+{% for recruiter_link in recruiter_links %}
+<a href="{% url 'profile_id' recruiter_link.user.user.pk %}">{{ recruiter_link.user.user.FIO }}</a><br>
 {% endfor %}
+<br/>
+<a href="{% url 'company_vacancy_list' company.id %}">Список вакансий</a>
+<br/>
+<a href="{% url 'company_minitest_list' company.id %}">Список тестов</a>
 {% endblock content %}

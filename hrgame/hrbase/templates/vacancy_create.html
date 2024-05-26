@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Создание вакансии{% endblock title %}
+{% block header %}Создание вакансии{% endblock header %}
+{% block content %}
+    <h1>Создать вакансию</h1>
+
+    <br/>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary btn-block">
+            Создать
+        </button>
+    </form>
+    
+    <br/>
+
+    <a href="{% url 'vacancy_list' %}">Назад к списку вакансий</a>
+
+{% endblock %}

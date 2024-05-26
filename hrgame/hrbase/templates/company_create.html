@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% load call_method %}
+{% block title %}Создание компании{% endblock title %}
+{% block header %}Создание компании{% endblock header %}
+{% block content %}
+    <h1>Создать компанию</h1>
+
+    <br/>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary btn-block">
+            Создать
+        </button>
+    </form>
+    
+    <br/>
+
+    <a href="{% url 'company_list' %}">Назад к списку компаний</a>
+
+{% endblock %}

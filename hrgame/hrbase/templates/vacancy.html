@@ -1,8 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Вакансия{% endblock title %}
-{% block header %}Вакансия{% endblock header %}
+{% block title %}Вакансия {{ vacancy.title }}{% endblock title %}
+{% block header %}Вакансия {{ vacancy.title }}{% endblock header %}
 
 {% block content %}
+
+<h1>{{ vacancy.title }}</h1>
+
+<p>
+    {% if vacancy.is_open %}
+        <span class="badge bg-success">Вакансия открыта</span>
+    {% else %}
+        <span class="badge bg-danger">Вакансия закрыта</span>
+    {% endif %}
+</p>
+
+<br/>
+
+<p><b>Компания:</b> {{ company.name }}</p>
+
+<p><b>Описание:</b> {{ vacancy.description }}</p>
+
+<br/>
+
+<a href="{% url 'vacancy_list' %}">Назад к списку вакансий</a>
 
 {% endblock content %}

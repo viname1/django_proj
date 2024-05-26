@@ -41,5 +41,14 @@ urlpatterns = [
     path('minitest/upload', views.upload_minitest, name='upload_minitest'),
     path('company', views.company_list, name='company_list'),
     path('company/<int:company_id>/', views.company_id, name='company_id'),
+    path('company/<int:company_id>/vacancy', views.company_vacancy_list, name='company_vacancy_list'),
+    path('company/<int:company_id>/minitest', views.company_minitest_list, name='company_minitest_list'),
+    path('company/create', views.company_create, name='company_create'),
+    path('vacancy', views.vacancy_list, name='vacancy_list'),
+    path('vacancy/<int:vacancy_id>/', views.vacancy_id, name='vacancy_id'),
+    path('vacancy/create', views.vacancy_create, name='vacancy_create'),
+    path('profile/resume/', views.resume_list, name='resume_list'),
+    path('profile/resume/<int:user_id>/', views.resume_list, name='resume_list'),
+    path('resume_upload/', views.resume_upload, name='resume_upload'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

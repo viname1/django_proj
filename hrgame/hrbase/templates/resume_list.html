@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load call_method %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="drop-zone" id="drop-zone">
+        Загрузить резюме
+    </div>
+    <input type="file" id="file-input" style="display: none;">
+</div>
+
+<ul class="list-group">
+    {% for resume in resume_list.all %}
+    <li class="list-group-item">
+        <a download="{{ resume.filename }}" href="{{ resume.file.get_absolute_url }}">{{ resume.filename }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+
+<script>
+    $(document).ready(function () {
+        var dropZone = $('#drop-zone');
+        var fileInput = $('#file-input');
+
+        dropZone.on('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.on('change', function () {
+            var files = this.files;
+            uploadFile(files[0]);
+        });
+
+        dropZone.on('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.addClass('dragover');
+        });
+
+        dropZone.on('dragleave', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.removeClass('dragover');
+        });
+
+        dropZone.on('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.removeClass('dragover');
+            var files = e.originalEvent.dataTransfer.files;
+            uploadFile(files[0]);
+        });
+
+        function uploadFile(file) {
+            var formData = new FormData();
+            var csrftoken = "{{ csrf_token }}";
+            formData.append('csrfmiddlewaretoken', csrftoken);
+            formData.append('file', file);
+            formData.append('filename', file.name);
+
+            $.ajax({
+                url: '{% url "resume_upload" %}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    alert(data.message);
+                },
+                error: function (jqXHR, textStatus, errorMessage) {
+                    alert('Error: ' + errorMessage);
+                }
+            });
+        }
+    });
+</script>
+{% endblock content %}

@@ -1,7 +1,7 @@
 from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import JobSeekerUser, RecruiterUser, SpecialityTag, UserExtend, ProfileRole
+from .models import Company, JobSeekerUser, RecruiterUser, ResumeDocument, SpecialityTag, UserExtend, ProfileRole, Vacancy, RecruiterCompanyLink
 
 
 class ProfileCreationForm(UserCreationForm):
@@ -60,3 +60,40 @@ class AvatarForm(forms.ModelForm):
     class Meta:
         model = UserExtend
         fields = ('avatar',)
+        
+class VacancyForm(forms.ModelForm):
+    class Meta:
+        model = Vacancy
+        fields = ['title', 'description', 'company', 'tags', 'is_open']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(VacancyForm, self).__init__(*args, **kwargs)
+        
+        if user:
+            recruiter_company = RecruiterCompanyLink.objects.filter(user__user=user).first().company
+            self.fields['company'].initial = recruiter_company
+            self.fields['company'].widget = forms.HiddenInput()
+
+class CompanyForm(forms.ModelForm):
+
+    
+    class Meta:
+        model = Company
+        fields = ['name', 'description', 'owner']
+        
+    def __init__(self, *args, **kwargs):
+        owner = kwargs.pop('owner', None)
+        super(CompanyForm, self).__init__(*args, **kwargs)
+        self.fields['owner'].initial = owner
+        self.fields['owner'].widget = forms.HiddenInput()
+
+class RecruiterCompanyLinkForm(forms.ModelForm):
+    class Meta:
+        model = RecruiterCompanyLink
+        fields = ['can_edit_test', 'can_edit_vacancy', 'is_company_admin', 'show_in_company_list']
+        
+class ResumeDocumentForm(forms.ModelForm):
+    class Meta:
+        model = ResumeDocument
+        fields = ['file']
