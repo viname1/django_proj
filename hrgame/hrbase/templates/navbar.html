@@ -19,10 +19,21 @@
             </li>
             
             {% if user.is_authenticated %}
-                <li class="nav-item">
+                {% comment %} <li class="nav-item">
                     <a class="nav-link" href="/profile">Профиль</a>
-                </li>
+                    <a class="nav-link" href="/profile/resume">Резюме</a>
+                </li> {% endcomment %}
+                <li class="nav-item dropdown">
 
+                    <a class="nav-link dropdown-toggle" href="/profile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Профиль
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/profile">Моя страница</a></li>
+                        <li><a class="dropdown-item" href="/profile/resume">Резюме</a></li>
+                        <li><a class="dropdown-item" href="/profile/edit">Редактирование</a></li>
+                    </ul>
+                </li>
                 {% if user.role == 1 %}
                     <li class="nav-item">
                         <a class="nav-link" href="/path">Маршрут</a>

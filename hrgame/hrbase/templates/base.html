@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-{# Load the tag library #}
 {% load django_bootstrap5 %}
 <html data-bs-theme="light">
 <head>
@@ -7,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Default title{% endblock title %}</title>
 
-    {% comment %} <link href="https://gcore.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> {% endcomment %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>

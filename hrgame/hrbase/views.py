@@ -13,7 +13,9 @@ from .models import Choice, Company, MiniTest, MiniTestChoiceResult, MiniTestQue
 
 # Create your views here.
 
-def index(request):
+def index(
+    request: HttpRequest
+) -> HttpResponse:
     return render(request, 'index.html')
 
 # def signup(request):
@@ -36,12 +38,11 @@ def signup(
         form = ProfileCreationForm()
     return render(request, 'signup.html', {'form': form})
 
+@login_required
 def profile(
     request: HttpRequest,
 ) -> HttpResponse:
     user = request.user
-    if(user.is_authenticated == False):
-        return redirect('login')
     # Получен ответ из формы
     if(request.method == 'POST'):
         # Сохранить роль пользователя
@@ -58,9 +59,12 @@ def profile(
             secondForm = RecruiterUserForm(instance=RecruiterUser.objects.get_or_create(user=user)[0])
         else:
             secondForm = RoleSelectForm()
-        return render(request, 'profile.html', {'commonForm': commonForm, 'secondForm': secondForm, 'avatarForm': avatarForm})
+        return render(request, 'profile.html', {'user_seen': user, 'commonForm': commonForm, 'secondForm': secondForm, 'avatarForm': avatarForm, 'ownable': True})
 
-def profile_id(request, profile_id):
+def profile_id(
+    request: HttpRequest,
+    profile_id: int
+) -> HttpResponse:
     user_seen = UserExtend.objects.get(id=profile_id)
 
     commonForm = CommonUserForm(instance=user_seen)
@@ -86,14 +90,19 @@ def avatar_upload(
     else:
         return HttpResponse(status=400, content='Введены некорректные данные: ' + str(form.errors))
 
-def resume_list(request, user_id=None):
+def resume_list(
+    request: HttpRequest,
+    user_id: int = None
+) -> HttpResponse:
     if user_id is None:
         user_id = request.user.id
     resume_list = ResumeDocument.objects.filter(user=user_id)
     owner = JobSeekerUser.objects.get(id=user_id)
     return render(request, 'resume_list.html', {'resume_list': resume_list, 'owner': owner, 'ownable': request.user.id==user_id})
 
-def resume_upload(request):
+def resume_upload(
+    request: HttpRequest
+) -> HttpResponse:
     if request.method == 'POST':
         request.POST._mutable = True
         request.POST['user'] = request.user
@@ -145,16 +154,23 @@ def profile_edit(
         return render(request, 'profile_edit.html', {'userForm': userForm, 'secondForm': secondForm})
 
 @login_required
-def path(request):
+def path(
+    request: HttpRequest
+) -> HttpResponse:
     return render(request, 'path.html')
 
 @login_required
-def minitest(request, minitest_id):
+def minitest(
+    request: HttpRequest,
+    minitest_id: int
+) -> HttpResponse:
     minitest = MiniTest.objects.get(pk=minitest_id)
     return render(request, 'minitest.html', {'minitest': minitest})
 
 @login_required
-def minitest_list(request):
+def minitest_list(
+    request: HttpRequest
+) -> HttpResponse:
     user = request.user
     minitest_list = None
     if(user.role == 1):
@@ -164,7 +180,10 @@ def minitest_list(request):
 
 @require_http_methods(['POST'])
 @login_required
-def minitest_submit(request, minitest_id):
+def minitest_submit(
+    request: HttpRequest,
+    minitest_id: int
+) -> HttpResponse:
     minitest = MiniTest.objects.get(pk=minitest_id)
     minitest_result = MiniTestResult(user=request.user.job_seeker, minitest=minitest, score=0, is_passed=False, is_actual=True)
     count_correct = 0
@@ -209,7 +228,9 @@ def minitest_submit(request, minitest_id):
 
 @require_http_methods(['POST'])
 @login_required
-def upload_minitest(request):
+def upload_minitest(
+    request: HttpRequest
+) -> HttpResponse:
     company_id=request.POST['company']
     minitest=None
     if company_id:
@@ -226,19 +247,30 @@ def upload_minitest(request):
         return redirect('minitest_list')
 
     
-def company_list(request):
+def company_list(
+    request: HttpRequest
+) -> HttpResponse:
     return render(request, 'company_list.html', {'company_list': Company.objects.all()})
 
-def company_id(request, company_id):
+def company_id(
+    request: HttpRequest,
+    company_id: int
+) -> HttpResponse:
     company = Company.objects.get(pk=company_id)
     return render(request, 'company.html', {'company': company})
 
-def company_vacancy_list(request, company_id):
+def company_vacancy_list(
+    request: HttpRequest,
+    company_id: int
+) -> HttpResponse:
     company = Company.objects.get(pk=company_id)
     vacancy_list = Vacancy.objects.filter(company=company, is_open=True).all()
     return render(request, 'vacancy_list.html', {'company': company, 'vacancy_list': vacancy_list})
 
-def company_minitest_list(request, company_id):
+def company_minitest_list(
+    request: HttpRequest,
+    company_id: int
+) -> HttpResponse:
     company = Company.objects.get(pk=company_id)
     minitest_list = MiniTest.objects.filter(company=company).all()
     can_edit_test = False
@@ -249,7 +281,9 @@ def company_minitest_list(request, company_id):
         can_edit_test = link and (link.is_company_admin or link.can_edit_test)
     return render(request, 'minitest_list.html', {'company': company, 'minitest_list': minitest_list, 'can_edit_test': can_edit_test})
 
-def company_create(request):
+def company_create(
+    request: HttpRequest
+) -> HttpResponse:
     if request.method == 'POST':
         form = CompanyForm(request.POST, owner=request.user)
         if form.is_valid():
@@ -264,7 +298,9 @@ def company_create(request):
         form = CompanyForm()
     return render(request, 'company_create.html', {'form': form})
 
-def vacancy_list(request):
+def vacancy_list(
+    request: HttpRequest
+) -> HttpResponse:
     vacancy_list = Vacancy.objects.all()
     return render(request, 'vacancy_list.html', {'vacancy_list': vacancy_list})
 
@@ -274,7 +310,10 @@ def vacancy_id(request, vacancy_id):
     return render(request, 'vacancy.html', {'vacancy': vacancy, 'company': company})
 
 @login_required
-def vacancy_create(request, company_id):
+def vacancy_create(
+    request: HttpRequest,
+    company_id: int
+) -> HttpResponse:
     user = request.user.recruiteruser
     company = Company.objects.get(pk=company_id)
     link = RecruiterCompanyLink.objects.filter(user=user, company=company).first()
@@ -291,7 +330,9 @@ def vacancy_create(request, company_id):
     return render(request, 'vacancy_create.html', {'form': form})
 
 @login_required
-def create_company(request):
+def create_company(
+    request: HttpRequest
+) -> HttpResponse:
     user = request.user
     if user.role != 2:
         return HttpResponse(status=403)

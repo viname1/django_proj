@@ -21,7 +21,7 @@
                     {% if ownable %}
                     <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% if user_seen.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid" title="Нажмите, чтобы изменить аватарку">
+                            <img src="{{ user_seen.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid" title="Нажмите, чтобы изменить аватарку">
                         {% else %}
                             <div role="button">
                                 <small class="text-muted">Нажмите, чтобы загрузить аватарку</small>
@@ -46,7 +46,7 @@
                     {% else %}
                     <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% if user_seen.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid">
+                            <img src="{{ user_seen.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid">
                         {% else %}
                             <div role="button">
                                 <small class="text-muted">Без аватарки</small>
@@ -57,8 +57,12 @@
                 </div>
               
                 <hr>
-                <h3>{{ user_seen.first_name }} {{ user_seen.last_name }}</h3>
+                <h3>{{ user_seen.FIO }}</h3>
+                {% if user_seen.email %}
                 <p>EMAIL: {{ user_seen.email }}</p>
+                {% else %}
+                <p>EMAIL: Не указан</p>
+                {% endif %}
                 <p>Роль: {% if user_seen.role == 1 %}Соискатель{% elif user_seen.role == 2 %}Рекрутер{% endif %}</p>
                 {% comment %} В зависимости от роли можно добавить разного {% endcomment %}
                 {% if user_seen.role == 1 %}
@@ -66,6 +70,11 @@
                 {% elif user_seen.role == 2 %}
                 <p>Компания: {{ user_seen.recruiter.company }}</p>
                 {% endif %}
+                <p>Специальности:
+                {% for speciality in user_seen.job_seeker.speciality.all %}
+                    <span class="badge rounded-pill bg-primary">{{ speciality }}</span>
+                {% endfor %}    
+                </p>
                 <hr>
             </div>
             <div class="col-md-8">
