@@ -6,9 +6,37 @@
     {% if user.role == 1 %}
         {% comment %} {% with job_seeker=user.job_seeker %} {% endcomment %}
         <div>
-            <h3>Профиль: {{ user.username }}</h1>
-            <h3>Этап: {{ user.job_seeker.level }}</h1>
-            <h3>Очки: {{ user.job_seeker.score }}</h1>
+            <p><strong>Профиль:</strong>
+                <a href="{% url 'profile_id' user.id %}">
+                    {{ user.FIO }}
+                </a>
+            </p>
+            <p><strong>Очки:</strong> {{ user.job_seeker.score }}</p>
+            <p><strong>Этап:</strong> {{ user.job_seeker.get_level_display }}</p>
+            {% if user.job_seeker.level == 1 %}
+                <p>
+                    В первую очередь вам надо загрузить
+                    <a href="{% url 'resume_list' %}">резюме</a>
+                </p>
+            {% elif user.job_seeker.level == 2 %}
+                <p>
+                    Следующий этап - решение тестов. Выберите любой 
+                    <a href="{% url 'minitest_list' %}">тест</a>
+                    по вашей специальности
+                </p>
+            {% elif user.job_seeker.level == 3 %}
+                <p>
+                    Теперь вы готовы оставить заявку на собеседование. Выберите интересующую 
+                    <a href="{% url 'vacancy_list' %}">вакансию</a>
+                </p>
+            {% elif user.job_seeker.level == 4 %}
+                <p>Отличный выбор. Желаем вам удачи в прохождении собеседования</p>
+            {% elif user.job_seeker.level == 5 %}
+                <p>Поздравляем, вы прошли собеседование</p
+                <form action="{% url 'reset_level' %}" method="post">
+                <button type="button" class="btn btn-outline-secondary">Сбросить этап</button>
+                </form>
+            {% endif %}
         </div>
         {% comment %} {% endwith %} {% endcomment %}
     {% else %}

@@ -11,11 +11,17 @@
             <li class="nav-item active">
                 <a class="nav-link" href="/">Главная</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/vacancy">Вакансии</a>
+            <li class="nav-item dropdown">
+                <div class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Вакансии
+                </div>
+                <ul class="dropdown-menu">
+                    <li><a class="nav-link dropdown-item" href="{% url 'vacancy_list_open' %}">Открытые вакансии</a></li>
+                    <li><a class="nav-link dropdown-item" href="{% url 'vacancy_list' %}">Все вакансии</a></li>
+                </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/company">Компании</a>
+                <a class="nav-link" href="{% url 'company_list' %}">Компании</a>
             </li>
             
             {% if user.is_authenticated %}
@@ -25,39 +31,35 @@
                 </li> {% endcomment %}
                 <li class="nav-item dropdown">
 
-                    <a class="nav-link dropdown-toggle" href="/profile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Профиль
-                    </a>
+                    </div>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/profile">Моя страница</a></li>
-                        <li><a class="dropdown-item" href="/profile/resume">Резюме</a></li>
-                        <li><a class="dropdown-item" href="/profile/edit">Редактирование</a></li>
+                        <li><a class="dropdown-item" href="{% url 'profile' %}">Моя страница</a></li>
+                        {% if user.role == 1 %}
+                            <li><a class="dropdown-item" href="{% url 'resume_list' %}">Резюме</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'profile_edit' %}">Редактирование</a></li>
                     </ul>
                 </li>
                 {% if user.role == 1 %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/path">Маршрут</a>
-                    </li>
-                {% elif user.role == 2 %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/requests">Заявки</a>
+                        <a class="nav-link" href="{% url 'path' %}">Маршрут</a>
                     </li>
                 {% endif %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Тесты
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/minitest">Список тестов</a></li>
-                        <li><a class="dropdown-item" href="/minitest_create">Создание теста</a></li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'vacancy_request_list' %}">Заявки</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'minitest_list' %}">Тесты</a>
+                </li>
+
             {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/signup">Регистрация</a>
+                    <a class="nav-link" href="{% url 'signup' %}">Регистрация</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/login">Вход</a>
+                    <a class="nav-link" href="{% url 'login' %}">Вход</a>
                 </li>
             {% endif %}
         </ul>

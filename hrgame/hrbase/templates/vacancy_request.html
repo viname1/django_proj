@@ -16,16 +16,14 @@
 </p>
 {% if user.role == 1 %}
     {% if vacancy.is_open %}
-    {% if active_vacancy_request %}
+    {% if active_request_id %}
     <p>
-        <button class="btn btn-primary" onclick="location.href='{% url 'vacancy_request_edit' active_vacancy_request.id %}'">Редактировать заявку</button>
+        <button class="btn btn-primary" onclick="location.href='{% url 'vacancy_request_edit' active_request_id %}'">Редактировать заявку</button>
     </p>
     {% else %}
-    {% if user.job_seeker.level == 3 %}
     <p>
         <button class="btn btn-primary" onclick="location.href='{% url 'vacancy_request_create' vacancy.id %}'">Оставить отклик</button>
     </p>
-    {% endif %}
     {% endif %}
     {% endif %}
 {% endif %}
@@ -34,14 +32,6 @@
         <button class="btn btn-primary" onclick="location.href='{% url 'vacancy_edit' vacancy.id %}'">Редактировать</button>
     </p>
 {% endif %}
-
-<br/>
-
-<p><b>Компания:</b> {{ company.name }}</p>
-
-<p><b>Описание:</b> {{ vacancy.description }}</p>
-
-<br/>
 
 <a href="{% url 'vacancy_list' %}">Назад к списку вакансий</a>
 

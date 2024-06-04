@@ -69,6 +69,23 @@ class VacancyRequestStatus(models.IntegerChoices):
                 return num
         return None
     
+class LevelStatus(models.IntegerChoices):
+    new = 1, 'Новичок'
+    minitests = 2, 'Решение тестов'
+    vacancy = 3, 'Поиск вакансии'
+    interview = 4, 'Собеседование'
+    finish = 5, 'Финиш'
+    
+    def choicesValues(self):
+        return [(i.value, i.label) for i in self]
+    
+    @classmethod
+    def string_to_int(cls, the_string):
+        for num, string in cls.choices:
+            if string == the_string:
+                return num
+        return None
+    
 #endregion  
 
 #region models
@@ -97,7 +114,7 @@ class UserExtend(AbstractUser, PermissionsMixin):
         blank=True,
         verbose_name='Аватарка')
     phone_number = models.CharField(max_length=20, blank=True, verbose_name='Номер телефона')
-    birthday = models.DateField(blank=True, verbose_name='Дата рождения')
+    birthday = models.DateField(blank=True, null=True, verbose_name='Дата рождения')
     role = models.IntegerField(
         default = ProfileRole.notSelected.value,
         verbose_name='Тип профиля')
@@ -110,8 +127,7 @@ class UserExtend(AbstractUser, PermissionsMixin):
 class JobSeekerUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE, related_name='job_seeker')
     about_self = models.TextField(blank=True, verbose_name='О себе')
-    # score = models.IntegerField(default=0, verbose_name='Рейтинг')
-    level = models.IntegerField(default=1, verbose_name='"Уровень"')
+    level = models.IntegerField(default=LevelStatus.new, verbose_name='"Уровень"', choices=LevelStatus.choices)
     resume = models.FileField(
         upload_to=RandomFileName('resumes/'),
         blank=True,
@@ -120,7 +136,7 @@ class JobSeekerUser(models.Model):
     
     @property
     def score(self):
-        return self.minitest_result_set.filter(is_actual=True, minitest__tags__in=self.speciality.all()).aggregate(models.Sum('score'))
+        return self.minitest_result_set.filter(is_actual=True, minitest__tags__in=self.speciality.all()).aggregate(models.Sum('score')).get('score__sum', 0)
 
 class RecruiterUser(models.Model):
     user = models.OneToOneField(UserExtend, on_delete=models.CASCADE)
@@ -194,12 +210,16 @@ class Vacancy(models.Model):
     is_open = models.BooleanField(default=True, verbose_name='Открыта ли вакансия')
     
 class VacancyRequest(models.Model):
-    user = models.ForeignKey(JobSeekerUser, on_delete=models.DO_NOTHING, verbose_name='Пользователь', related_name='vacancy_application_set')
-    recruiter = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Рассматривающий запрос', related_name='vacancy_application_set', blank=True, null=True)
-    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, verbose_name='Вакансия', related_name='vacancy_application_set')
+    user = models.ForeignKey(JobSeekerUser, on_delete=models.DO_NOTHING, verbose_name='Пользователь', related_name='vacancy_request_set')
+    recruiter = models.ForeignKey(RecruiterUser, on_delete=models.DO_NOTHING, verbose_name='Рассматривающий запрос', related_name='vacancy_request_set', blank=True, null=True)
+    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, verbose_name='Вакансия', related_name='vacancy_request_set')
     date = models.DateTimeField(auto_now_add=True, verbose_name='Дата запроса')
     date_of_interview = models.DateTimeField(blank=True, null=True, verbose_name='Дата собеседования')
     status = models.IntegerField(default=VacancyRequestStatus.open, verbose_name='Статус', choices=VacancyRequestStatus.choices)
+    
+    @property
+    def company(self):
+        return self.vacancy.company
     
 #region test
 class MiniTest(models.Model):
@@ -269,6 +289,41 @@ class MiniTest(models.Model):
 
         return minitests
         
+    def create_result(self, user, post_data):
+        minitest_result = MiniTestResult(user=user, minitest=self, score=0, is_passed=False, is_actual=True)
+        count_correct = 0
+        score = 0
+        minitest_question_results = []
+        minitest_choice_results = []
+        
+        for question in self.question_set.all():
+            answers = list(map(int, post_data.getlist(f'q{question.number}')))
+            is_correct, q_score = question.score_check(answers)
+            if(is_correct):
+                count_correct += 1
+            score += q_score
+            minitest_question_result = MiniTestQuestionResult(minitest_result=minitest_result, question=question, score=q_score, is_correct=is_correct)
+            minitest_question_results.append(minitest_question_result)
+            choice_set = question.choice_set.filter(number__in=answers)
+            for choice in choice_set:
+                minitest_choice_result = MiniTestChoiceResult(
+                    minitest_question_result=minitest_question_result,
+                    choice=choice
+                )
+                minitest_choice_results.append(minitest_choice_result)
+        
+        MiniTestResult.objects.filter(minitest=self, user=minitest_result.user, is_actual=True).exclude(pk=minitest_result.pk).update(is_actual=False)
+        
+        minitest_result.count_correct = count_correct
+        minitest_result.score = score
+        minitest_result.is_actual = True
+        minitest_result.is_passed = score >= self.pass_score
+        minitest_result.save()
+        for minitest_question_result in minitest_question_results:
+            minitest_question_result.save()
+        for minitest_choice_result in minitest_choice_results:
+            minitest_choice_result.save()
+        return minitest_result
 
 class Question(models.Model):
     minitest = models.ForeignKey(MiniTest, on_delete=models.CASCADE, verbose_name='Тест', related_name='question_set')
@@ -302,7 +357,9 @@ class Question(models.Model):
             #     return True, self.score
             # else:
             #     return False, 0
-          
+    
+ 
+       
 
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name='Вопрос', related_name='choice_set')
@@ -311,8 +368,8 @@ class Choice(models.Model):
     is_correct = models.BooleanField(default=False, verbose_name='Правильный вариант')
 
 class MiniTestResult(models.Model):
-    user = models.ForeignKey(JobSeekerUser, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='mini_test_result_set')
-    minitest = models.ForeignKey(MiniTest, on_delete=models.CASCADE, verbose_name='Тест', related_name='mini_test_result_set')
+    user = models.ForeignKey(JobSeekerUser, on_delete=models.CASCADE, verbose_name='Пользователь', related_name='minitest_result_set')
+    minitest = models.ForeignKey(MiniTest, on_delete=models.CASCADE, verbose_name='Тест', related_name='minitest_result_set')
     score = models.IntegerField(default=0, verbose_name='Баллы за тест')
     is_passed = models.BooleanField(default=False, verbose_name='Пройден ли тест')
     date = models.DateTimeField(auto_now_add=True, verbose_name='Дата прохождения')

@@ -1,0 +1,121 @@
+
+<h5 class="card-title">Информация о соискателе</h5>
+<div class="dropdown">
+    {% if ownable %}
+    <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {% if user_info.avatar %}
+            <img src="{{ user_info.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid" title="Нажмите, чтобы изменить аватарку">
+        {% else %}
+            <div role="button">
+                <small class="text-muted">Нажмите, чтобы загрузить аватарку</small>
+            </div>
+        {% endif %}
+    </div>
+    <div class="dropdown-menu">
+        <div class="d-flex justify-content-center">
+            <div class="card col-md-10">
+                <div class="card-header text-center">Загрузка аватарки      </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% url 'avatar_upload' %}">
+                        {% csrf_token %}
+                        <input type="file" name="avatar" accept="image/*" class="form-control" id="id_avatar">
+                        {% comment %} {% bootstrap_form avatarForm %} {% endcomment %}
+                        <button type="submit" class="btn btn-primary btn-block">Upload Avatar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {% if user_info.avatar %}
+            <img src="{{ user_info.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid">
+        {% else %}
+            <div role="button">
+                <small class="text-muted">Без аватарки</small>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<p class="card-text"><strong>ФИО:</strong> 
+{% if user_link %}
+<a href="{% url 'profile_id' user_info.id %}">
+    {{ user_info.FIO }}
+</a>
+{% else %}
+    {{ user_info.FIO }}
+{% endif %}
+</p>
+<p class="card-text"><strong>Email:</strong>
+    {% if user_info.email %}
+    {{ user_info.email }}
+    {% else %}
+    Не указан
+    {% endif %}
+</p>
+<p class="card-text"><strong>Телефон:</strong>
+    {% if user_info.phone_number %}
+    {{ user_info.phone_number }}
+    {% else %}
+    Не указан
+    {% endif %}
+</p>
+{% if user_info.role == 1 %}
+<p class="card-text"><strong>Очки:</strong> {{ user_info.job_seeker.score }}</p>
+<p class="card-text"><strong>О себе:</strong> {{ user_info.job_seeker.about_self }}</p>
+<p class="card-text">
+    <strong>Специальности:</strong> 
+    {% for speciality in user_info.job_seeker.speciality.all %}
+        <span class="badge rounded-pill bg-primary">{{ speciality }}</span>
+    {% endfor %}   
+</p>
+{% endif %}
+{% if user_info.job_seeker.resume_document_set %}
+<p class="card-text">
+    <strong>Резюме:</strong>
+    <ul>
+        {% for resume_document in user_info.job_seeker.resume_document_set.all %}
+            {% if resume_document.visible %}
+            <li>
+                <a href="{{ resume_document.file.url }}" download="{{ resume_document.filename }}">
+                    {{ resume_document.filename }}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}    
+    </ul>
+</p>
+{% endif %}
+
+{% if minitest_results %}
+<p class="card-text">
+    <strong>Результаты тестов:</strong>
+    <ul>
+        {% for minitest_result in minitest_results %}
+        <li>
+            <a href="{% url 'minitest_result' minitest_result.id %}">
+                {{ minitest_result.minitest.title }}
+            </a>
+            ({{ minitest_result.score }}/{{ minitest_result.minitest.max_score }} баллов)
+            
+            {% if minitest_result.is_passed %}
+                <span class="badge bg-success">
+                    Пройден успешно
+                </span>
+            {% else %}
+                <span class="badge bg-danger">
+                    Не пройден
+                </span>
+            {% endif %}
+            {% for tag in minitest_result.minitest.tags.all %}
+            <span class="badge bg-secondary">
+                {{ tag }}
+            </span>
+            {% endfor %}
+        </li>
+        {% endfor %}
+    </ul>
+</p>
+{% endif %}

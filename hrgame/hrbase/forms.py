@@ -1,13 +1,20 @@
 from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Company, JobSeekerUser, RecruiterUser, ResumeDocument, SpecialityTag, UserExtend, ProfileRole, Vacancy, RecruiterCompanyLink
+from .models import Company, JobSeekerUser, RecruiterUser, ResumeDocument, SpecialityTag, UserExtend, ProfileRole, Vacancy, RecruiterCompanyLink, VacancyRequest, VacancyRequestStatus
 
 
 class ProfileCreationForm(UserCreationForm):
     class Meta:
         model = UserExtend
         fields = ['username', 'first_name', 'last_name', 'patronymic', 'phone_number', 'birthday']
+        widgets = {
+            'birthday': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'birthday': 'Дата рожденияя'
+        }
+
 
     def save(self, commit=True):
         user = super(ProfileCreationForm, self).save(commit=False)
@@ -30,6 +37,12 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = UserExtend
         fields = ['last_name', 'first_name', 'patronymic', 'avatar', 'phone_number', 'birthday']
+        widgets = {
+            'birthday': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'birthday': 'Дата рожденияя'
+        }
 
 
 class CommonUserForm(forms.ModelForm):
@@ -46,7 +59,7 @@ class JobSeekerUserForm(forms.ModelForm):
     )
     class Meta:
         model = JobSeekerUser
-        fields = ['about_self', 'resume', 'speciality']
+        fields = ['about_self', 'speciality']
 
 class RecruiterUserForm(forms.ModelForm):
     class Meta:
@@ -64,7 +77,7 @@ class AvatarForm(forms.ModelForm):
 class VacancyForm(forms.ModelForm):
     class Meta:
         model = Vacancy
-        fields = ['title', 'description', 'company', 'tags', 'is_open']
+        fields = ['title', 'description', 'tags', 'is_open']
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
@@ -96,4 +109,17 @@ class RecruiterCompanyLinkForm(forms.ModelForm):
 class ResumeDocumentForm(forms.ModelForm):
     class Meta:
         model = ResumeDocument
-        fields = ['file']
+        fields = ['file', 'filename']
+        
+class VacancyRequestUpdateForm(forms.ModelForm):
+    class Meta:
+        model = VacancyRequest
+        fields = ['date_of_interview', 'status']
+        widgets = {
+            'date_of_interview': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'status': forms.Select(choices=VacancyRequestStatus.choices)
+        }
+        labels = {
+            'date_of_interview': 'Дата собеседования',
+            'status': 'Статус'
+        }

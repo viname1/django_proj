@@ -15,72 +15,7 @@
           </form>
     {% else %}
         {% comment %} Просмотр профиля {% endcomment %}
-        <div class="row">
-            <div class="col-md-4">
-                <div class="dropdown">
-                    {% if ownable %}
-                    <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if user_seen.avatar %}
-                            <img src="{{ user_seen.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid" title="Нажмите, чтобы изменить аватарку">
-                        {% else %}
-                            <div role="button">
-                                <small class="text-muted">Нажмите, чтобы загрузить аватарку</small>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="dropdown-menu">
-                        <div class="d-flex justify-content-center">
-                            <div class="card col-md-10">
-                                <div class="card-header text-center">Загрузка аватарки      </div>
-                                <div class="card-body">
-                                    <form method="post" enctype="multipart/form-data" action="{% url 'avatar_upload' %}">
-                                        {% csrf_token %}
-                                        <input type="file" name="avatar" accept="image/*" class="form-control" id="id_avatar">
-                                        {% comment %} {% bootstrap_form avatarForm %} {% endcomment %}
-                                        <button type="submit" class="btn btn-primary btn-block">Upload Avatar</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="card" style="width: 18rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if user_seen.avatar %}
-                            <img src="{{ user_seen.avatar.url }}" alt="avatar" class="img-thumbnail img-fluid">
-                        {% else %}
-                            <div role="button">
-                                <small class="text-muted">Без аватарки</small>
-                            </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-              
-                <hr>
-                <h3>{{ user_seen.FIO }}</h3>
-                {% if user_seen.email %}
-                <p>EMAIL: {{ user_seen.email }}</p>
-                {% else %}
-                <p>EMAIL: Не указан</p>
-                {% endif %}
-                <p>Роль: {% if user_seen.role == 1 %}Соискатель{% elif user_seen.role == 2 %}Рекрутер{% endif %}</p>
-                {% comment %} В зависимости от роли можно добавить разного {% endcomment %}
-                {% if user_seen.role == 1 %}
-                    <p>О себе: {{ user_seen.job_seeker.about_self }}</p>
-                {% elif user_seen.role == 2 %}
-                <p>Компания: {{ user_seen.recruiter.company }}</p>
-                {% endif %}
-                <p>Специальности:
-                {% for speciality in user_seen.job_seeker.speciality.all %}
-                    <span class="badge rounded-pill bg-primary">{{ speciality }}</span>
-                {% endfor %}    
-                </p>
-                <hr>
-            </div>
-            <div class="col-md-8">
-                <p>{{ user_seen.profile.about_self }}</p>
-            </div>
-        </div>
+        {% include 'profile_info_block.html' with user_info=user_seen ownable=ownable minitest_results=minitest_results %}
     {% endif %}
 {% endif %}
 {% endblock content %}

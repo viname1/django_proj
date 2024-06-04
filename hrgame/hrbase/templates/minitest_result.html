@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Ваш результат: {{ mini_test_result.score }}</h1>
+<h1>Ваш результат: {{ minitest_result.score }}</h1>
+{% if minitest_result.is_pass %}
+<h2>Тест пройден</h2>
+{% else %}
+<h2>Тест не пройден</h2>
+{% endif %}
 {% endblock content %}

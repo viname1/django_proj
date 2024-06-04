@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if user.role == 1 %}
+<h2>Ваши заявки</h2>
+{% elif user.role == 2 %}
+<h2>Все заявки</h2>
+{% endif %}
+<ul class="list-group">
+    {% for request in vacancy_request_list %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'vacancy_request_edit' request.id %}">
+                    <strong>{{ request.vacancy.title }}</strong> 
+                </a> 
+                - {{ request.get_status_display }}
+                {% if request.date_of_interview %}
+                    <br>Дата собеседования: {{ request.date_of_interview }}
+                {% endif %}
+            </div>
+            <div>
+                {% if user.role == 1 and request.status == 1 %}
+                    <form method="post" action="{% url 'vacancy_request_cancel' request.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Отменить заявку</button>
+                    </form>
+                {% elif user.role == 2 %}
+                    <a href="{% url 'vacancy_request_edit' request.id %}" class="btn btn-primary btn-sm">Смотреть заявку</a>
+                {% endif %}
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

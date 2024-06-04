@@ -10,8 +10,15 @@
 <a href="{% url 'company_create' %}">Создать компанию</a>
 {% endif %}
 
-<h1>Список компаний</h1>
 
+{% if managed_company_list %}
+<h1>Компании, в которых я состою</h1>
+{% for company in managed_company_list %}
+<h2><a href="{% url 'company_id' company.id %}">{{ company.name }}</a></h2>
+<p>{{ company.description }}</p>
+{% endfor %}
+{% endif %} 
+<h1>Список компаний</h1>
 {% for company in company_list %}
 <h2><a href="{% url 'company_id' company.id %}">{{ company.name }}</a></h2>
 <p>{{ company.description }}</p>

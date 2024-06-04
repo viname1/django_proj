@@ -9,7 +9,7 @@
 <h2>{{ company.name }}</h2>
 <p>{{ company.description }}</p>
 
-<p>Сотрудники:</p>
+<p class="card-text"><strond>Сотрудники:</strong></p>
 {% call_method_json company.recruiter_link_set 'filter' '{"show_in_company_list":true}' as recruiter_links %}
 {% for recruiter_link in recruiter_links %}
 <a href="{% url 'profile_id' recruiter_link.user.user.pk %}">{{ recruiter_link.user.user.FIO }}</a><br>

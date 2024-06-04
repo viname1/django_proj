@@ -3,10 +3,17 @@
 {% block title %}Добро пожаловать{% endblock title %}
 {% block header %}Профиль{% endblock header %}
 {% block content %}
-<form class="form-control-sm" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% bootstrap_form userForm layout='horizontal' %}
-    {% bootstrap_form secondForm layout='horizontal' %}
-    {% bootstrap_button button_type="submit" content="Сохранить" %}
-</form>
+<div class="card">
+    <div class="card-header">
+        Редактирование профиля
+    </div>
+    <div class="card-body">
+        <form class="form-control-sm" method="post">
+            {% csrf_token %}
+            {% bootstrap_form userForm layout='horizontal' %}
+            {% bootstrap_form secondForm layout='horizontal' %}
+            {% bootstrap_button button_type="submit" content="Сохранить" %}
+        </form>
+    </div>
+</div>
 {% endblock content %}

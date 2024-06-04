@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for minitest_result in minitest_results %}
+<a href="{% url 'minitest_result_id' minitest_result.id %}">{{ minitest_result }}</a><br>
+{% endfor %}
+{% endblock content %}

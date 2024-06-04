@@ -3,8 +3,8 @@
 {% block header %}Вакансии{% endblock header %}
 {% block content %}
 
-{% if user.is_staff %}
-    <a href="{% url 'vacancy_create' %}">
+{% if can_edit_vacancy %}
+    <a href="{% url 'vacancy_create' company.id %}">
         <button class="btn btn-primary mt-2" >Создать вакансию</button>
     </a>
 
@@ -16,22 +16,25 @@
 {% if vacancy_list %}
     <ul class="list-group">
         {% for vacancy in vacancy_list.all %}
-            <li class="list-group-item">
-                {% if vacancy.is_open %}
-                    <span class="badge bg-success">Открыта</span>
-                {% else %}
-                    <span class="badge bg-danger">Закрыта</span>
-                {% endif %}
-                
-                <a href="{% url 'vacancy_id' vacancy.id %}" class="mx-2">
-                    {{ vacancy.title }}
-                </a>
-
-                {% for tag in vacancy.tags.all %}
-                    <span class="badge bg-secondary">
-                        {{ tag }}
-                    </span>
-                {% endfor %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {% if vacancy.is_open %}
+                        <span class="badge bg-success">Открыта</span>
+                    {% else %}
+                        <span class="badge bg-danger">Закрыта</span>
+                    {% endif %}
+                    
+                    <a href="{% url 'vacancy_id' vacancy.id %}" class="mx-2">
+                        {{ vacancy.title }}
+                    </a>
+                </div>
+                <div>
+                    {% for tag in vacancy.tags.all %}
+                        <span class="badge bg-secondary">
+                            {{ tag }}
+                        </span>
+                    {% endfor %}
+                </div>
             </li>
         {% endfor %}
     </ul>

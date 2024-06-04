@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<h2>Детали заявки на вакансию</h2>
+
+<div class="card mb-3">
+    <div class="card-header">
+        Заявка на вакансию: {{ vacancy_request.vacancy.title }}
+    </div>
+    <div class="card-body">
+        {% include 'profile_info_block.html' with user_info=vacancy_request.user.user user_link=True %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Статус заявки
+    </div>
+    <div class="card-body">
+        {% if user.role == 1 %}
+        {% if vacancy_request.recruiter %}
+        <p class="card-text"><strong>Рекрутер:</strong>
+            <a href="{% url 'profile_id' vacancy_request.recruiter.user.pk %}">
+                {{ vacancy_request.recruiter.FIO }}
+            </a>
+        </p>
+        {% endif %}
+        <p class="card-text"><strong>Дата собеседования:</strong> 
+        {% if vacancy_request.date_of_interview %}
+            {{ vacancy_request.date_of_interview }}
+        {% else %}
+            Не указано
+        {% endif %}
+        </p>
+        <p class="card-text"><strong>Статус:</strong> {{ vacancy_request.get_status_display }}</p>
+        {% elif user.role == 2 %}
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form layout='horizontal' %}
+            {% bootstrap_button button_type="submit" content="Сохранить изменения" %}
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

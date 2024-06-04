@@ -9,13 +9,45 @@
     <input type="file" id="file-input" style="display: none;">
 </div>
 
-<ul class="list-group">
-    {% for resume in resume_list.all %}
-    <li class="list-group-item">
-        <a download="{{ resume.filename }}" href="{{ resume.file.get_absolute_url }}">{{ resume.filename }}</a>
-    </li>
-    {% endfor %}
-</ul>
+<div class="container">
+    <h2>Ваши резюме</h2>
+    <ul class="list-group">
+        {% for resume in resume_list %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ resume.file.url }}" download="{{ resume.filename }}">{{ resume.filename }}</a>
+            <div>
+                <button class="btn btn-secondary btn-sm toggle-visibility" data-id="{{ resume.id }}">
+                    {% if resume.visible %}Скрыть{% else %}Показать{% endif %}
+                </button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ resume.id }}">Удалить</button>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                Вы действительно хотите удалить это резюме? Данное действие нельзя будет отменить.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form id="delete-form" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script>
@@ -73,6 +105,34 @@
                 }
             });
         }
+
+        // Toggle resume visibility
+        $('.toggle-visibility').click(function() {
+            var button = $(this);
+            var resumeId = button.data('id');
+            $.ajax({
+                url: "{% url 'resume_toggle_visibility' 0 %}".replace('/0/', '/' + resumeId + '/'),
+                method: "POST",
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.visible) {
+                        button.text('Скрыть');
+                    } else {
+                        button.text('Показать');
+                    }
+                }
+            });
+        });
+
+        // Set the action of the delete form dynamically
+        $('#deleteModal').on('show.bs.modal', function(event) {
+            var button = $(event.relatedTarget);
+            var resumeId = button.data('id');
+            var action = "{% url 'resume_delete' 0 %}".replace('/0/', '/' + resumeId + '/');
+            $('#delete-form').attr('action', action);
+        });
     });
 </script>
 {% endblock content %}

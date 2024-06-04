@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load django_bootstrap5 %}
 {% block title %}Создание вакансии{% endblock title %}
 {% block header %}Создание вакансии{% endblock header %}
 {% block content %}
@@ -9,7 +8,7 @@
 
     <form method="post">
         {% csrf_token %}
-        {% bootstrap_form form layout='horizontal' %}
+        {{ form.as_p }}
         <button type="submit" class="btn btn-primary btn-block">
             Создать
         </button>

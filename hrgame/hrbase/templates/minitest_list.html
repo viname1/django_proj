@@ -27,7 +27,7 @@
         {% if user.role == 1 %}
         {% call_method minitest 'actual_result' user.job_seeker as minitest_result %}
         {% if minitest_result %}
-            ({{ minitest_result.score }}/{{ minitest.pass_score }})
+            ({{ minitest_result.score }}/{{ minitest.max_score }} баллов)
             
             {% if minitest_result.is_passed %}
                 <span class="badge bg-success">
